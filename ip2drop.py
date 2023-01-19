@@ -179,7 +179,7 @@ def main():
     print(f'Using command: {args.command}')
     print(f'Checking threshold: {args.threshold}')
 
-    # export_log(args.command, ctl_log)
+    export_log(args.command, ctl_log)
     get_log(ctl_log, args.threshold, args.stat)
 
 
