@@ -10,14 +10,14 @@ from collections import Counter
 import datetime
 import argparse
 
-ip_timeoit      = 10
-ip_threshold    = 150
-ctl_log_file    = "ip2drop.log"
-ctl_log_dir     = f'{os.getcwd()}/log'
-export_command  = "cat /var/log/auth.log | grep 'Connection closed by authenticating user root'"
+ip_timeoit = 10
+ip_threshold = 150
+ctl_log_file = "ip2drop.log"
+ctl_log_dir = f'{os.getcwd()}/log'
+export_command = "journalctl -u ssh -S today --no-tail | grep 'Connection closed by authenticating user root'"
 
-drop_db         = "db.sql"
-drop_db_schema  = "db_schema.sql"
+drop_db = "db.sql"
+drop_db_schema = "db_schema.sql"
 arf_default_msg = "Drop IP Information"
 
 ## 
@@ -26,7 +26,7 @@ try:
     # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
     conn = sqlite3.connect(drop_db)
 
-    print( f'Checking {drop_db} schema...' )
+    print(f'Checking {drop_db} schema...')
     with open(drop_db_schema, 'r') as f:
         schema = f.read()
         conn.executescript(schema)
@@ -40,21 +40,22 @@ finally:
         print(f'Checking {drop_db} schema: Done.')
 
 
-## 
+##
 
-def check_dir(dir):
-
-    isExist = os.path.exists(dir)
+def check_dir(dest):
+    isExist = os.path.exists(dest)
     if not isExist:
+        # Create a new directory because it does not exist
+        os.makedirs(dest)
+        print(f'Log catalog: {dest} created. Done.')
 
-       # Create a new directory because it does not exist
-       os.makedirs(dir)
-       print(f'Log catalog: {dir} created. Done.')
 
 def check_file(file):
     # Create the file if it does not exist
     if not os.path.exists(file):
         open(file, 'w').close()
+        print(f'Log file: {file} created. Done.')
+
 
 ##
 
@@ -71,7 +72,7 @@ def add_drop_ip(ip, ip_int, status, timeout, date, group):
 def get_drop_ip(ip):
     conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ip2drop WHERE IP =:IP",{'IP':ip})
+    cur.execute("SELECT * FROM ip2drop WHERE IP =:IP", {'IP': ip})
     status = cur.fetchone()
     print(f'Status {status}')
 
@@ -88,7 +89,7 @@ def get_drop_ip(ip):
 def ip_exist(ip):
     conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
-    response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip, ))
+    response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
     fetched = response.fetchone()[0]
     if fetched == 1:
         # print("Exist")
@@ -147,15 +148,16 @@ def print_db_entries():
 
     con.close()
 
-def arg_parse():
 
-    parser = argparse.ArgumentParser(description = arf_default_msg)
-    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default = export_command)
-    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default = ctl_log_file)
-    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default = ip_threshold)
+def arg_parse():
+    parser = argparse.ArgumentParser(description=arf_default_msg)
+    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=export_command)
+    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=ctl_log_file)
+    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
 
     # args = parser.parse_args()
     return parser.parse_args()
+
 
 def main():
     args = arg_parse()
@@ -175,11 +177,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
