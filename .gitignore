@@ -1,4 +1,7 @@
 .idea
-bash
+
+# Exported logs
 log
+
+# DB
 db.sql
