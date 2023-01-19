@@ -32,4 +32,4 @@ xxx.xxx.xx.x -> 2
 success
 ```
 
-This is real-time firewalld action (not `--permit`) for reset blocking IPs you can reload firewalld. 
+This is real-time firewalld action (not `--permanent`) for reset blocking IPs you can reload firewalld. 
