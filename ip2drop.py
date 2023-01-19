@@ -130,7 +130,10 @@ def get_log(log, threshold):
                 # print(frop_int)
                 os.system("firewall-cmd --zone=drop --add-source=" + ip)
 
+                # Drop time
                 currentDate = datetime.datetime.now()
+                # Drop end
+                undropDate = currentDate + datetime.timedelta(seconds=ip_timeoit)
 
                 # Check true
                 if ip_exist(ip):
@@ -163,7 +166,7 @@ def main():
     args = arg_parse()
 
     ctl_log = f'{ctl_log_dir}/{args.logfile}'
-    print(ctl_log)
+
     check_dir(ctl_log_dir)
     check_file(ctl_log)
 
