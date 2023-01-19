@@ -6,7 +6,7 @@ Find malicious IP addresses and send it's to firewalld `drop` zone.
 
 * `-c` - command execution. Bash or another command which `ip2drop` will run
 * `-l` - log file name. `ip2drop` will export IP addresses from this log file and this IP on threshold exceeding
-* `-t` - threshold. Threshold exceeding value. Example: failure root login attempts through ssh max threshold - 1 
+* `-t` - threshold. Threshold exceeding value. Example: failure root login attempts through ssh max threshold - `1` 
 
 Works with several conditions:
 
