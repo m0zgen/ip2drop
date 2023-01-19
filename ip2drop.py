@@ -3,9 +3,7 @@
 import os
 import re
 import sqlite3
-import datetime
 import ipaddress
-import subprocess
 from collections import Counter
 import datetime
 import argparse
@@ -170,6 +168,7 @@ def main():
     check_dir(ctl_log_dir)
     check_file(ctl_log)
 
+    print(f'Using command: {args.command}')
     print(f'Checking threshold: {args.threshold}')
 
     export_log(args.command, ctl_log)
