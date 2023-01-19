@@ -112,7 +112,7 @@ def export_log(command, desctination):
     os.system(command + ' > ' + desctination)
 
 
-def get_log(log, threshold):
+def get_log(log, threshold, showstat):
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
 
@@ -126,18 +126,21 @@ def get_log(log, threshold):
 
                 frop_int = ipaddress.IPv4Address(int_ip)
                 # print(frop_int)
-                os.system("firewall-cmd --zone=drop --add-source=" + ip)
-
-                # Drop time
-                currentDate = datetime.datetime.now()
-                # Drop end
-                undropDate = currentDate + datetime.timedelta(seconds=ip_timeoit)
-
-                # Check true
-                if ip_exist(ip):
-                    print(f'IP exist: {ip}')
+                if showstat:
+                    print('Get to log statistic..')
                 else:
-                    add_drop_ip(ip, int_ip, 1, 120, currentDate, 'testing')
+                    os.system("firewall-cmd --zone=drop --add-source=" + ip)
+
+                    # Drop time
+                    currentDate = datetime.datetime.now()
+                    # Drop end
+                    undropDate = currentDate + datetime.timedelta(seconds=ip_timeoit)
+
+                    # Check true
+                    if ip_exist(ip):
+                        print(f'IP exist: {ip}')
+                    else:
+                        add_drop_ip(ip, int_ip, 1, 120, currentDate, 'testing')
 
 
 def print_db_entries():
@@ -155,6 +158,8 @@ def arg_parse():
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=export_command)
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=ctl_log_file)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
+    parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
+                        default=False)
 
     # args = parser.parse_args()
     return parser.parse_args()
@@ -168,11 +173,14 @@ def main():
     check_dir(ctl_log_dir)
     check_file(ctl_log)
 
+    if args.stat:
+        print('Stat is enable')
+
     print(f'Using command: {args.command}')
     print(f'Checking threshold: {args.threshold}')
 
-    export_log(args.command, ctl_log)
-    get_log(ctl_log, args.threshold)
+    # export_log(args.command, ctl_log)
+    get_log(ctl_log, args.threshold, args.stat)
 
 
 if __name__ == "__main__":
