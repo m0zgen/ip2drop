@@ -167,9 +167,7 @@ def main():
     check_dir(ctl_log_dir)
     check_file(ctl_log)
 
-    print(args.command)
-    print(args.logfile)
-    print(args.threshold)
+    print(f'Checking threshold: {args.threshold}')
 
     export_log(args.command, ctl_log)
     get_log(ctl_log, args.threshold)
