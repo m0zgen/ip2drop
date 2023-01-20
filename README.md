@@ -1,6 +1,8 @@
 # ip2drop
 
-Find malicious IP addresses and send it's to firewalld `drop` zone.
+Find malicious IP addresses and send it's to firewalld `drop` zone for relaxing)
+
+It is a interval-based solution, you can setup execute commands, threshold and running intervals.
 
 ## Parameters
 
@@ -32,4 +34,12 @@ xxx.xxx.xx.x -> 2
 success
 ```
 
-This is real-time firewalld action (not `--permanent`) for reset blocking IPs you can reload firewalld. 
+This is real-time firewalld action (not `--permanent`) for reset blocking IPs you can reload firewalld.
+
+## Running intervals
+
+`cron` it is a good choise for `ip2drop`, as example you can use `/etc/cron.daily` or just `crontab`:
+
+```
+0 */1 * * * /path/to/ip2drop/ip2drop.py -c "cat /var/log/nginx/access.log | grep wp-content | awk '{print $1}'" -l nginx.log -t 10 > /dev/null
+```
