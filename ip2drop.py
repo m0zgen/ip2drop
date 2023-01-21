@@ -12,7 +12,7 @@ ip_timeoit = 10
 ip_threshold = 150
 ctl_log_file = "ip2drop.log"
 ctl_log_dir = f'{os.getcwd()}/log'
-export_command = "journalctl -u ssh -S today --no-tail | grep 'Connection closed by authenticating user root'"
+export_command = "journalctl -u ssh -S today --no-tail | grep 'Failed password for root'"
 
 drop_db = "db.sql"
 drop_db_schema = "db_schema.sql"
@@ -57,10 +57,10 @@ def check_file(file):
 
 ##
 
-def add_drop_ip(ip, ip_int, status, timeout, date, group):
+def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     conn = sqlite3.connect(drop_db)
     cursor = conn.cursor()
-    params = (ip, ip_int, status, timeout, date, group)
+    params = (ip, ip_int, status, timeout, date_added, group)
     cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?)", params)
     conn.commit()
     print('Drop Entry Created Successful')
@@ -140,7 +140,7 @@ def get_log(log, threshold, showstat):
                     if ip_exist(ip):
                         print(f'IP exist: {ip}')
                     else:
-                        add_drop_ip(ip, int_ip, 1, 120, currentDate, 'testing')
+                        add_drop_ip(ip, int_ip, 1, undropDate, currentDate, 'testing')
 
 
 def print_db_entries():
@@ -160,6 +160,8 @@ def arg_parse():
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
+    parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
+                        default=False)
 
     # args = parser.parse_args()
     return parser.parse_args()
@@ -175,6 +177,11 @@ def main():
 
     if args.stat:
         print('Stat is enable')
+
+    if args.print:
+        print('Print is enable')
+        print_db_entries()
+        exit(0)
 
     print(f'Using command: {args.command}')
     print(f'Checking threshold: {args.threshold}')
