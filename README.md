@@ -41,5 +41,5 @@ This is real-time firewalld action (not `--permanent`) for reset blocking IPs yo
 `cron` it is a good choise for `ip2drop`, as example you can use `/etc/cron.daily` or just `crontab`:
 
 ```
-0 */1 * * * /path/to/ip2drop/ip2drop.py -c "cat /var/log/nginx/access.log | grep wp-content | awk '{print $1}'" -l nginx.log -t 10 > /dev/null
+0 */1 * * * /path/to/ip2drop/ip2drop.py -c "cat /var/log/nginx/access.log | grep 'yii2.*301' | awk '{print $1}'" -l nginx.log -t 3 > /dev/null
 ```
