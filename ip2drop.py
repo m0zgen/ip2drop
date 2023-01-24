@@ -4,6 +4,7 @@ import os
 import re
 import sqlite3
 import ipaddress
+import iptools
 from collections import Counter
 import datetime
 import argparse
@@ -120,6 +121,12 @@ def extract_ip(line):
     pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
     ip = pattern.search(line)[0]
     return ip
+
+def validate_ip(ip):
+    # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
+    iptools.ipv4.validate_ip(ip) #returns bool
+    # iptools.ipv6.validate_ip(ipv6) #returns bool
+    # TODO: need to add validation logic
 
 def delete_ip(ip):
     if ip_exist(ip):
