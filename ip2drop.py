@@ -12,7 +12,8 @@ ip_timeoit = 10
 ip_threshold = 150
 ctl_log_file = "ip2drop.log"
 ctl_log_dir = f'{os.getcwd()}/log'
-export_command = "journalctl -u ssh -S today --no-tail | grep 'Failed password for root'"
+export_command = "journalctl -u ssh -S today --no-tail | grep 'more authentication failures'"
+ip_excludes = "127.0.0.1 1.1.1.1"
 
 drop_db = "db.sql"
 drop_db_schema = "db_schema.sql"
@@ -66,6 +67,14 @@ def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     print('Drop Entry Created Successful')
     conn.close()
 
+def delete_dropped_ip(ip):
+    conn = sqlite3.connect(drop_db)
+    cur = conn.cursor()
+    cur.execute("""DELETE FROM ip2drop WHERE IP =:IP """,{'IP':ip})
+    print(f'IP Deletion Successful: {ip}')
+    conn.commit()
+    conn.close()
+
 
 def get_drop_ip(ip):
     conn = sqlite3.connect(drop_db)
@@ -112,13 +121,18 @@ def export_log(command, desctination):
     os.system(command + ' > ' + desctination)
 
 
-def get_log(log, threshold, showstat):
+def get_log(log, threshold, excludes, showstat):
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
 
+        exclude_from_check = excludes.split(' ')
+        # print(exclude_from_check)
+
         for ip, count in ips.items():
             # print(ip, '->', count)
-            if count > threshold:
+            if ip in exclude_from_check:
+                print (f'Ignore IP from checking: {ip}')
+            elif count >= threshold:
                 print(f'{ip} -> {count}')
 
                 int_ip = int(ipaddress.IPv4Address(ip))
@@ -158,6 +172,8 @@ def arg_parse():
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=export_command)
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=ctl_log_file)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
+    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database', default='127.0.0.1')
+    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated", default=ip_excludes)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
     parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
@@ -183,11 +199,16 @@ def main():
         print_db_entries()
         exit(0)
 
+
+    # if args.delete:
+    #     print('Delete IP from DB')
+    #     exit(0)
+
     print(f'Using command: {args.command}')
     print(f'Checking threshold: {args.threshold}')
 
     export_log(args.command, ctl_log)
-    get_log(ctl_log, args.threshold, args.stat)
+    get_log(ctl_log, args.threshold, args.excludes, args.stat)
 
 
 if __name__ == "__main__":
