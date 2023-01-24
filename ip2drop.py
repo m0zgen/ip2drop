@@ -13,7 +13,7 @@ ip_threshold = 150
 ctl_log_file = "ip2drop.log"
 ctl_log_dir = f'{os.getcwd()}/log'
 export_command = "journalctl -u ssh -S today --no-tail | grep 'more authentication failures'"
-ip_excludes = "127.0.0.1 1.1.1.1"
+ip_excludes = "127.0.0.1 1.1.1.1 "
 
 drop_db = "db.sql"
 drop_db_schema = "db_schema.sql"
@@ -122,6 +122,7 @@ def export_log(command, desctination):
 
 
 def get_log(log, threshold, excludes, showstat):
+    print(f'Processing log: {log}')
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
 
@@ -133,7 +134,7 @@ def get_log(log, threshold, excludes, showstat):
             if ip in exclude_from_check:
                 print (f'Ignore IP from checking: {ip}')
             elif count >= threshold:
-                print(f'{ip} -> {count}')
+                print(f'Found: {ip} -> Threshold: {count}')
 
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # print(int_ip)
@@ -155,6 +156,8 @@ def get_log(log, threshold, excludes, showstat):
                         print(f'IP exist: {ip}')
                     else:
                         add_drop_ip(ip, int_ip, 1, undropDate, currentDate, 'testing')
+            else:
+                print(f'Attack with threshold ({ip_threshold}) conditions  not detected.')
 
 
 def print_db_entries():
@@ -199,13 +202,17 @@ def main():
         print_db_entries()
         exit(0)
 
+    if not args.delete:
+        print("ARG DELETE")
+        exit(0)
+
 
     # if args.delete:
     #     print('Delete IP from DB')
     #     exit(0)
 
-    print(f'Using command: {args.command}')
-    print(f'Checking threshold: {args.threshold}')
+    # print(f'Using command: {args.command}')
+    # print(f'Checking threshold: {args.threshold}')
 
     export_log(args.command, ctl_log)
     get_log(ctl_log, args.threshold, args.excludes, args.stat)
