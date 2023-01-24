@@ -9,8 +9,12 @@ It is a interval-based solution, you can setup execute commands, threshold and r
 * `-c` - command execution. Bash or another command which `ip2drop` will run
 * `-l` - log file name. `ip2drop` will export IP addresses from this log file and this IP on threshold exceeding
 * `-t` - threshold. Threshold exceeding value. Example: failure root login attempts through ssh max threshold - `1` 
+* `-e` - excludes ip list, separated with space (example: `127.0.0.1 1.1.1.1`)
+* `-p` - print database statistics
+* `-s` - get statistics without IP droping
+* `-d` - delete ip from DB
 
-Works with several conditions:
+Works with multiple conditions:
 
 * Run exporter for exporting log file from `command` argument 
 * Check exported log 
@@ -35,6 +39,21 @@ success
 ```
 
 This is real-time firewalld action (not `--permanent`) for reset blocking IPs you can reload firewalld.
+
+Show DB entries:
+```
+./ip2drop.py -p
+```
+
+Get statistic:
+```
+./ip2drop.py -s -t 1
+```
+
+Delete IP from DB:
+```
+./ip2drop.py -d '1.1.1.1'
+```
 
 ## Running intervals
 
