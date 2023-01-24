@@ -86,8 +86,10 @@ def get_drop_ip(ip):
     fetched = cur.fetchone()[0]
     if fetched == 1:
         print("Exist")
+        return True
     else:
         print("Does not exist")
+        return False
 
     # if cur.fetchone()[1] == ip:
     #     print('LogIn Successful') 
@@ -115,6 +117,13 @@ def extract_ip(line):
     pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
     ip = pattern.search(line)[0]
     return ip
+
+def delete_ip(ip):
+    if ip_exist(ip):
+        print(f'IP: {ip} will be deleted')
+        delete_dropped_ip(ip)
+    else:
+        print(f'IP: {ip} not exist in DB')
 
 
 def export_log(command, desctination):
@@ -175,7 +184,7 @@ def arg_parse():
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=export_command)
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=ctl_log_file)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
-    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database', default='127.0.0.1')
+    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated", default=ip_excludes)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
@@ -202,8 +211,8 @@ def main():
         print_db_entries()
         exit(0)
 
-    if not args.delete:
-        print("ARG DELETE")
+    if args.delete is not None:
+        delete_ip(args.delete)
         exit(0)
 
 
