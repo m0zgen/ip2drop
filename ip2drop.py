@@ -151,7 +151,8 @@ def get_log(log, threshold, excludes, showstat):
                 frop_int = ipaddress.IPv4Address(int_ip)
                 # print(frop_int)
                 if showstat:
-                    print('Get to log statistic..')
+                    print('Get to log statistic.. without drop.')
+                    # TODO: need to coding
                 else:
                     os.system("firewall-cmd --zone=drop --add-source=" + ip)
 
