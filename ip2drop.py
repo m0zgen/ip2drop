@@ -94,6 +94,9 @@ def get_drop_ip(ip):
     # if cur.fetchone()[1] == ip:
     #     print('LogIn Successful') 
 
+def remove_ip_from_firewall(ip):
+    os.system("firewall-cmd --zone=drop --remove-source=" + ip)
+
 
 def ip_exist(ip):
     conn = sqlite3.connect(drop_db)
@@ -122,6 +125,7 @@ def delete_ip(ip):
     if ip_exist(ip):
         print(f'IP: {ip} will be deleted')
         delete_dropped_ip(ip)
+        remove_ip_from_firewall(ip)
     else:
         print(f'IP: {ip} not exist in DB')
 
@@ -143,17 +147,17 @@ def get_log(log, threshold, excludes, showstat):
             if ip in exclude_from_check:
                 print (f'Ignore IP from checking: {ip}')
             elif count >= threshold:
-                print(f'Found: {ip} -> Threshold: {count}')
-
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # print(int_ip)
 
                 frop_int = ipaddress.IPv4Address(int_ip)
                 # print(frop_int)
                 if showstat:
-                    print('Get to log statistic.. without drop.')
+                    print('Action without drop: Show threshold count exceeded')
+                    print(f'Found: {ip} -> Threshold: {count}')
                     # TODO: need to coding
                 else:
+                    print(f'Action drop: {ip} -> Threshold: {count}')
                     os.system("firewall-cmd --zone=drop --add-source=" + ip)
 
                     # Drop time
