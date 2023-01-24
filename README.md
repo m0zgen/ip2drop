@@ -40,6 +40,11 @@ success
 
 This is real-time firewalld action (not `--permanent`) for reset blocking IPs you can reload firewalld.
 
+Set custom threshold fro drop action:
+```
+./ip2drop.py -t 1
+```
+
 Show DB entries:
 ```
 ./ip2drop.py -p
