@@ -23,27 +23,6 @@ arf_default_msg = "Drop IP Information"
 
 ## 
 
-# TODO: Proccess db operation to def
-# Add db.sql exists testing
-
-try:
-    # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
-    conn = sqlite3.connect(drop_db)
-
-    print(f'Checking {drop_db} schema...')
-    with open(drop_db_schema, 'r') as f:
-        schema = f.read()
-        conn.executescript(schema)
-    # print("Done")
-    conn.close()
-except sqlite3.Error as error:
-    print("Error while creating a sqlite table", error)
-finally:
-    if conn:
-        conn.close()
-        print(f'Checking {drop_db} schema: Done.')
-
-
 ## FS Operations
 
 def check_dir(dest):
@@ -62,6 +41,27 @@ def check_file(file):
 
 
 ## DB Operations
+
+# TODO: Proccess db operation to def
+# Add db.sql exists testing
+
+def create_db_schema():
+    try:
+        # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
+        conn = sqlite3.connect(drop_db)
+
+        print(f'Checking {drop_db} schema...')
+        with open(drop_db_schema, 'r') as f:
+            schema = f.read()
+            conn.executescript(schema)
+        # print("Done")
+        conn.close()
+    except sqlite3.Error as error:
+        print("Error while creating a sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+            print(f'Checking {drop_db} schema: Done.')
 
 def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     conn = sqlite3.connect(drop_db)
@@ -229,16 +229,19 @@ def arg_parse():
 def main():
     args = arg_parse()
 
+    if not os.path.exists(drop_db):
+        create_db_schema()
+
     ctl_log = f'{ctl_log_dir}/{args.logfile}'
 
     check_dir(ctl_log_dir)
     check_file(ctl_log)
 
     if args.stat:
-        print('Stat is enable')
+        print('Mode: Show statistics without actions')
 
     if args.print:
-        print('Print is enable')
+        print('Mode: Print DB records')
         print_db_entries()
         exit(0)
 
