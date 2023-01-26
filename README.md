@@ -1,6 +1,6 @@
 # ip2drop
 
-Find malicious IP addresses and send it's to firewalld `drop` zone for relaxing)
+Find malicious IP addresses through executed command and send it's to firewalld `drop` zone for relaxing)
 
 It is a interval-based solution, you can setup execute commands, threshold and running intervals.
 
