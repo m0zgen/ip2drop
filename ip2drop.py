@@ -92,21 +92,17 @@ def delete_dropped_ip(ip):
     print(f'IP Deletion Successful: {ip}')
     conn.close()
 
-
+# TODO: Get info dor dropped IP
 def get_drop_ip(ip):
     conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
-    cur.execute("SELECT * FROM ip2drop WHERE IP =:IP", {'IP': ip})
-    status = cur.fetchone()
-    print(f'Status {status}')
-
-    fetched = cur.fetchone()[0]
+    response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
+    fetched = response.fetchone()[0]
     if fetched == 1:
-        print("Exist")
-        return True
+        print(fetched)
+        
     else:
-        print("Does not exist")
-        return False
+        print("Not found")
 
     # if cur.fetchone()[1] == ip:
     #     print('LogIn Successful') 
@@ -123,6 +119,14 @@ def ip_exist(ip):
     else:
         # print("Does not exist")
         return False
+
+
+def print_db_entries():
+    con = sqlite3.connect(drop_db)
+    cur = con.cursor()
+    for row in cur.execute('SELECT * FROM ip2drop;'):
+        print(row)
+    con.close()
 
 
 ## Firewall Operations
@@ -161,7 +165,7 @@ def export_log(command, desctination):
 
 
 def get_log(log, threshold, excludes, showstat):
-    print(f'Processing log: {log}')
+    print(f'Info: Processing log: {log}')
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
 
@@ -171,7 +175,7 @@ def get_log(log, threshold, excludes, showstat):
         for ip, count in ips.items():
             # print(ip, '->', count)
             if ip in exclude_from_check:
-                print (f'Ignore IP from checking: {ip}')
+                print (f'Info: Found Ignored IP: {ip}')
             elif count >= threshold:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # print(int_ip)
@@ -183,9 +187,10 @@ def get_log(log, threshold, excludes, showstat):
                     print(f'Found: {ip} -> Threshold: {count}')
                     # TODO: need to coding
                 else:
-                    print(f'Action drop: {ip} -> Threshold: {count}')
-                    os.system("firewall-cmd --zone=drop --add-source=" + ip)
 
+                    # TODO: Beed to remove this section
+                    print(f'Action: Drop: {ip} -> Threshold: {count}')
+                    os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # Drop time
                     currentDate = datetime.datetime.now()
                     # Drop end
@@ -193,21 +198,14 @@ def get_log(log, threshold, excludes, showstat):
 
                     # Check true
                     if ip_exist(ip):
-                        print(f'IP exist: {ip}')
+                        print(f'Info: IP exist in Drop DB: {ip}')
+                        # get_drop_ip(ip)
                     else:
                         add_drop_ip(ip, int_ip, 1, undropDate, currentDate, 'testing')
+                        # print(f'Action: Drop: {ip} -> Threshold: {count}')
+                        # os.system("firewall-cmd --zone=drop --add-source=" + ip)
             else:
                 print(f'Attack with threshold ({ip_threshold}) conditions  not detected.')
-
-
-def print_db_entries():
-    con = sqlite3.connect(drop_db)
-    cur = con.cursor()
-
-    for row in cur.execute('SELECT * FROM ip2drop;'):
-        print(row)
-
-    con.close()
 
 
 def arg_parse():
