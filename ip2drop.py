@@ -14,7 +14,7 @@ ip_timeoit = 10
 ip_threshold = 150
 ctl_log_file = "ip2drop.log"
 ctl_log_dir = f'{os.getcwd()}/log'
-export_command = "journalctl -u ssh -S today --no-tail | grep 'more authentication failures'"
+export_command = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 ip_excludes = "127.0.0.1 1.1.1.1 "
 
 drop_db = "db.sql"
@@ -22,6 +22,9 @@ drop_db_schema = "db_schema.sql"
 arf_default_msg = "Drop IP Information"
 
 ## 
+
+# TODO: Proccess db operation to def
+# Add db.sql exists testing
 
 try:
     # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
@@ -41,7 +44,7 @@ finally:
         print(f'Checking {drop_db} schema: Done.')
 
 
-##
+## FS Operations
 
 def check_dir(dest):
     isExist = os.path.exists(dest)
@@ -58,7 +61,7 @@ def check_file(file):
         print(f'Log file: {file} created. Done.')
 
 
-##
+## DB Operations
 
 def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     conn = sqlite3.connect(drop_db)
@@ -69,12 +72,24 @@ def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     print('Drop Entry Created Successful')
     conn.close()
 
+
+def update_drop_status(ip, status):
+    conn = sqlite3.connect('drop_db')
+    cur = conn.cursor()
+    # status = input("Enter status: ")
+    cur.execute("""UPDATE ip2drop SET STATUS = :STATUS WHERE IP =:IP """,{'STATUS':status,'IP':ip})
+    conn.commit()
+    print("Update Status Successful")
+    conn.close()
+
+## TODO: Checking already banned
+
 def delete_dropped_ip(ip):
     conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
     cur.execute("""DELETE FROM ip2drop WHERE IP =:IP """,{'IP':ip})
-    print(f'IP Deletion Successful: {ip}')
     conn.commit()
+    print(f'IP Deletion Successful: {ip}')
     conn.close()
 
 
@@ -96,9 +111,6 @@ def get_drop_ip(ip):
     # if cur.fetchone()[1] == ip:
     #     print('LogIn Successful') 
 
-def remove_ip_from_firewall(ip):
-    os.system("firewall-cmd --zone=drop --remove-source=" + ip)
-
 
 def ip_exist(ip):
     conn = sqlite3.connect(drop_db)
@@ -111,6 +123,12 @@ def ip_exist(ip):
     else:
         # print("Does not exist")
         return False
+
+
+## Firewall Operations
+
+def remove_ip_from_firewall(ip):
+    os.system("firewall-cmd --zone=drop --remove-source=" + ip)
 
 
 def get_ip(line):
