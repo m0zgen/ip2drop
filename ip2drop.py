@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Author: Yevgeniy Goncharov, https://lab.sys-adm.in
+# Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 
 import os
 import re
