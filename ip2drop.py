@@ -2,6 +2,8 @@
 # Author: Yevgeniy Goncharov, https://lab.sys-adm.in
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 
+## Imports
+
 import os
 import re
 import sqlite3
@@ -9,6 +11,9 @@ import ipaddress
 from collections import Counter
 import datetime
 import argparse
+
+
+## Vars
 
 ip_timeoit = 10
 ip_threshold = 150
@@ -21,7 +26,7 @@ drop_db = "db.sql"
 drop_db_schema = "db_schema.sql"
 arf_default_msg = "Drop IP Information"
 
-## 
+## Actions
 
 ## FS Operations
 
@@ -73,10 +78,11 @@ def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     conn.close()
 
 
-def update_drop_status(ip, status):
-    conn = sqlite3.connect('drop_db')
+# Status counting
+def update_drop_status(status, ip):
+    conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
-    # status = input("Enter status: ")
+    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
     cur.execute("""UPDATE ip2drop SET STATUS = :STATUS WHERE IP =:IP """,{'STATUS':status,'IP':ip})
     conn.commit()
     print("Update Status Successful")
@@ -199,7 +205,8 @@ def get_log(log, threshold, excludes, showstat):
                     # Check true
                     if ip_exist(ip):
                         print(f'Info: IP exist in Drop DB: {ip}')
-                        # get_drop_ip(ip)
+                        # TODO: Get current 'status' and then +1
+                        update_drop_status(11, ip)
                     else:
                         add_drop_ip(ip, int_ip, 1, undropDate, currentDate, 'testing')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
