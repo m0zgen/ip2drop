@@ -215,8 +215,8 @@ def get_log(log, threshold, excludes, showstat):
                         add_drop_ip(ip, int_ip, 1, undropDate, currentDate, 'testing')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
-            else:
-                print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
+            # else:
+            #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
 
 
 def arg_parse():
