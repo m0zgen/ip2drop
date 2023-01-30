@@ -17,18 +17,35 @@ import logging
 
 IP_TIMEOUT = 10
 IP_THRESHOLD = 150
-CTL_LOG_FILE = "ip2drop.log"
-CTL_LOG_DIR = f'{os.getcwd()}/log'
 EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
 
-DROP_DB = f'{os.getcwd()}/db.sql'
-DROP_DB_SCHEMA = f'{os.getcwd()}/db_schema.sql'
+# Script works dirs
+BASE_DIR = os.path.dirname(__file__)
+
+# Relatives
+RELATIVE_SRC_DIR = "src/"
+RELATIVE_DB_DIR = "db/"
+RELATIVE_LOGS_DIR = "logs/"
+RELATIVE_CONF_DIR = "conf.d/"
+
+# Paths
+SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
+CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
+DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
+EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
+
+# Export command log
+CTL_LOG_FILE = "ip2drop.log"
+
+DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
+DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
 ## Init Logger
 
 # TODO: Add -v, --verbose as DEBUG mode
+# Script logger
 logging.basicConfig(filename = '/var/log/ip2drop.log',
                 filemode='a',
                 format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
@@ -274,12 +291,13 @@ def arg_parse():
 def main():
     args = arg_parse()
 
-    if not os.path.exists(DROP_DB):
+    if not os.path.exists(DB_DIR):
+        check_dir(DB_DIR)
         create_db_schema()
 
-    ctl_log = f'{CTL_LOG_DIR}/{args.logfile}'
+    ctl_log = os.path.join(EXPORTED_LOGS_DIR, args.logfile)
 
-    check_dir(CTL_LOG_DIR)
+    check_dir(EXPORTED_LOGS_DIR)
     check_file(ctl_log)
 
     if args.stat:
