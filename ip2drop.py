@@ -12,7 +12,6 @@ from collections import Counter
 import datetime
 import argparse
 
-
 ## Vars
 
 ip_timeoit = 10
@@ -25,6 +24,7 @@ ip_excludes = "127.0.0.1 1.1.1.1 "
 drop_db = "db.sql"
 drop_db_schema = "db_schema.sql"
 arf_default_msg = "Drop IP Information"
+
 
 ## Actions
 
@@ -68,6 +68,7 @@ def create_db_schema():
             conn.close()
             print(f'Checking {drop_db} schema: Done.')
 
+
 def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
     conn = sqlite3.connect(drop_db)
     cursor = conn.cursor()
@@ -83,20 +84,22 @@ def update_drop_status(status, ip):
     conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
-    cur.execute("""UPDATE ip2drop SET STATUS = :STATUS WHERE IP =:IP """,{'STATUS':status,'IP':ip})
+    cur.execute("""UPDATE ip2drop SET STATUS = :STATUS WHERE IP =:IP """, {'STATUS': status, 'IP': ip})
     conn.commit()
     print("Update Status Successful")
     conn.close()
+
 
 ## TODO: Checking already banned
 
 def delete_dropped_ip(ip):
     conn = sqlite3.connect(drop_db)
     cur = conn.cursor()
-    cur.execute("""DELETE FROM ip2drop WHERE IP =:IP """,{'IP':ip})
+    cur.execute("""DELETE FROM ip2drop WHERE IP =:IP """, {'IP': ip})
     conn.commit()
     print(f'IP Deletion Successful: {ip}')
     conn.close()
+
 
 # TODO: Get info dor dropped IP
 def get_drop_ip(ip):
@@ -106,7 +109,7 @@ def get_drop_ip(ip):
     fetched = response.fetchone()[0]
     if fetched == 1:
         print(fetched)
-        
+
     else:
         print("Not found")
 
@@ -151,6 +154,7 @@ def extract_ip(line):
     ip = pattern.search(line)[0]
     return ip
 
+
 # def validate_ip(ip):
 #     # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
 #     iptools.ipv4.validate_ip(ip) #returns bool
@@ -181,7 +185,7 @@ def get_log(log, threshold, excludes, showstat):
         for ip, count in ips.items():
             # print(ip, '->', count)
             if ip in exclude_from_check:
-                print (f'Info: Found Ignored IP: {ip}')
+                print(f'Info: Found Ignored IP: {ip}')
             elif count >= threshold:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # print(int_ip)
@@ -221,7 +225,8 @@ def arg_parse():
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=ctl_log_file)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
-    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated", default=ip_excludes)
+    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
+                        default=ip_excludes)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
     parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
@@ -253,7 +258,6 @@ def main():
     if args.delete is not None:
         delete_ip(args.delete)
         exit(0)
-
 
     # if args.delete:
     #     print('Delete IP from DB')
