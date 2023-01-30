@@ -67,3 +67,12 @@ Delete IP from DB:
 ```
 0 */1 * * * /path/to/ip2drop/ip2drop.py -c "cat /var/log/nginx/access.log | grep 'yii2.*301' | awk '{print $1}'" -l nginx.log -t 3 > /dev/null
 ```
+
+## Logs
+
+`ip2drop` using `logger` for own logging routines, log default located in `/var/log/ip2drop.log`:
+```
+30-01-2023 19-43-59,316 root INFO ip2drop started with params:
+30-01-2023 19-43-59,316 root INFO Command: journalctl -u ssh -S today --no-tail | grep 'Failed password' Log: /opt/ip2drop/logs/ip2drop.log Threshold 150 Stat: False
+30-01-2023 19-43-59,331 root INFO Processing log: /opt/ip2drop/logs/ip2drop.log
+```
