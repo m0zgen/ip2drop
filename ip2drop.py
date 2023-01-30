@@ -26,23 +26,30 @@ DROP_DB = "db.sql"
 DROP_DB_SCHEMA = "db_schema.sql"
 ARG_DEFAULT_MSG = "Drop IP Information"
 
-## Settings
+## Init Logger
 
+# TODO: Add -v, --verbose as DEBUG mode
 logging.basicConfig(filename = '/var/log/ip2drop.log',
                 filemode='a',
                 format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                 datefmt='%d-%m-%Y %H-%M-%S',
                 level=logging.DEBUG)
 
-# Examples:
-# logging.debug('Debug message')
-# logging.info('Info message')
-# logging.warning('Warning message')
-# logging.error('Error message')
-# logging.critical('Critical message')
+def _debug(msg):
+    logging.debug(msg)
 
 def _info(msg):
     logging.info(msg)
+
+def _warn(msg):
+    logging.warning(msg)
+
+def _err(msg):
+    logging.error(msg)
+
+def _crit(msg):
+    logging.critical(msg)
+
 
 ## Actions
 
