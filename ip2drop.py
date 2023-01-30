@@ -11,6 +11,7 @@ import ipaddress
 from collections import Counter
 import datetime
 import argparse
+import logging
 
 ## Vars
 
@@ -25,6 +26,23 @@ DROP_DB = "db.sql"
 DROP_DB_SCHEMA = "db_schema.sql"
 ARG_DEFAULT_MSG = "Drop IP Information"
 
+## Settings
+
+logging.basicConfig(filename = '/var/log/ip2drop.log',
+                filemode='a',
+                format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                datefmt='%d-%m-%Y %H-%M-%S',
+                level=logging.DEBUG)
+
+# Examples:
+# logging.debug('Debug message')
+# logging.info('Info message')
+# logging.warning('Warning message')
+# logging.error('Error message')
+# logging.critical('Critical message')
+
+def _info(msg):
+    logging.info(msg)
 
 ## Actions
 
@@ -142,6 +160,7 @@ def print_db_entries():
 
 def remove_ip_from_firewall(ip):
     os.system("firewall-cmd --zone=drop --remove-source=" + ip)
+    logging.info(f'{ip} removed from firewalld.')
 
 
 def get_ip(line):
@@ -176,6 +195,8 @@ def export_log(command, desctination):
 
 def get_log(log, threshold, excludes, showstat):
     print(f'Info: Processing log: {log}')
+    logging.info(f'Processing log: {log}')
+
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
 
@@ -186,6 +207,8 @@ def get_log(log, threshold, excludes, showstat):
             # print(ip, '->', count)
             if ip in exclude_from_check:
                 print(f'Info: Found Ignored IP: {ip}')
+                logging.info(f'Found Ignored IP: {ip}')
+
             elif count >= threshold:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # print(int_ip)
@@ -193,14 +216,15 @@ def get_log(log, threshold, excludes, showstat):
                 frop_int = ipaddress.IPv4Address(int_ip)
                 # print(frop_int)
                 if showstat:
-                    print('Action without drop: Show threshold count exceeded')
-                    print(f'Found: {ip} -> Threshold: {count}')
+                    print(f'Show stat found: {ip} -> Threshold: {count}')
+                    logging.info(f'Action without drop. Found: {ip} -> Threshold: {count}')
                     # TODO: need to coding
                 else:
 
                     # TODO: Beed to remove this section
                     print(f'Action: Drop: {ip} -> Threshold: {count}')
                     os.system("firewall-cmd --zone=drop --add-source=" + ip)
+                    logging.info(f'{ip} banned.')
                     # Drop time
                     currentDate = datetime.datetime.now()
                     # Drop end
@@ -209,6 +233,7 @@ def get_log(log, threshold, excludes, showstat):
                     # Check true
                     if ip_exist(ip):
                         print(f'Info: IP exist in Drop DB: {ip}')
+                        logging.info(f'IP exist in Drop DB: {ip}')
                         # TODO: Get current 'status' and then +1
                         update_drop_status(11, ip)
                     else:
@@ -238,6 +263,8 @@ def arg_parse():
 
 def main():
     args = arg_parse()
+
+    _info(f'Mode: database name { DROP_DB }')
 
     if not os.path.exists(DROP_DB):
         create_db_schema()
