@@ -1,8 +1,10 @@
+# IDEs
 .idea
 .fleet
 
-# Exported logs
-log
+# DIRs
+logs
+db
 
 # DB
 db.sql
