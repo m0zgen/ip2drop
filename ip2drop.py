@@ -14,16 +14,16 @@ import argparse
 
 ## Vars
 
-ip_timeoit = 10
-ip_threshold = 150
-ctl_log_file = "ip2drop.log"
-ctl_log_dir = f'{os.getcwd()}/log'
-export_command = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
-ip_excludes = "127.0.0.1 1.1.1.1 "
+IP_TIMEOUT = 10
+IP_THRESHOLD = 150
+CTL_LOG_FILE = "ip2drop.log"
+CTL_LOG_DIR = f'{os.getcwd()}/log'
+EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
+IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
 
-drop_db = "db.sql"
-drop_db_schema = "db_schema.sql"
-arf_default_msg = "Drop IP Information"
+DROP_DB = "db.sql"
+DROP_DB_SCHEMA = "db_schema.sql"
+ARG_DEFAULT_MSG = "Drop IP Information"
 
 
 ## Actions
@@ -53,10 +53,10 @@ def check_file(file):
 def create_db_schema():
     try:
         # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
-        conn = sqlite3.connect(drop_db)
+        conn = sqlite3.connect(DROP_DB)
 
-        print(f'Checking {drop_db} schema...')
-        with open(drop_db_schema, 'r') as f:
+        print(f'Checking {DROP_DB} schema...')
+        with open(DROP_DB_SCHEMA, 'r') as f:
             schema = f.read()
             conn.executescript(schema)
         # print("Done")
@@ -66,11 +66,11 @@ def create_db_schema():
     finally:
         if conn:
             conn.close()
-            print(f'Checking {drop_db} schema: Done.')
+            print(f'Checking {DROP_DB} schema: Done.')
 
 
 def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
-    conn = sqlite3.connect(drop_db)
+    conn = sqlite3.connect(DROP_DB)
     cursor = conn.cursor()
     params = (ip, ip_int, status, timeout, date_added, group)
     cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?)", params)
@@ -81,7 +81,7 @@ def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
 
 # Status counting
 def update_drop_status(status, ip):
-    conn = sqlite3.connect(drop_db)
+    conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
     cur.execute("""UPDATE ip2drop SET STATUS = :STATUS WHERE IP =:IP """, {'STATUS': status, 'IP': ip})
@@ -93,7 +93,7 @@ def update_drop_status(status, ip):
 ## TODO: Checking already banned
 
 def delete_dropped_ip(ip):
-    conn = sqlite3.connect(drop_db)
+    conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     cur.execute("""DELETE FROM ip2drop WHERE IP =:IP """, {'IP': ip})
     conn.commit()
@@ -103,39 +103,39 @@ def delete_dropped_ip(ip):
 
 # TODO: Get info dor dropped IP
 def get_drop_ip(ip):
-    conn = sqlite3.connect(drop_db)
-    cur = conn.cursor()
+    conn = sqlite3.connect(DROP_DB)
     response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
     fetched = response.fetchone()[0]
     if fetched == 1:
         print(fetched)
-
     else:
         print("Not found")
+    conn.close()
 
     # if cur.fetchone()[1] == ip:
     #     print('LogIn Successful') 
 
 
 def ip_exist(ip):
-    conn = sqlite3.connect(drop_db)
-    cur = conn.cursor()
+    conn = sqlite3.connect(DROP_DB)
     response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
     fetched = response.fetchone()[0]
     if fetched == 1:
         # print("Exist")
+        conn.close()
         return True
     else:
         # print("Does not exist")
+        conn.close()
         return False
 
 
 def print_db_entries():
-    con = sqlite3.connect(drop_db)
-    cur = con.cursor()
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
     for row in cur.execute('SELECT * FROM ip2drop;'):
         print(row)
-    con.close()
+    conn.close()
 
 
 ## Firewall Operations
@@ -204,7 +204,7 @@ def get_log(log, threshold, excludes, showstat):
                     # Drop time
                     currentDate = datetime.datetime.now()
                     # Drop end
-                    undropDate = currentDate + datetime.timedelta(seconds=ip_timeoit)
+                    undropDate = currentDate + datetime.timedelta(seconds=IP_TIMEOUT)
 
                     # Check true
                     if ip_exist(ip):
@@ -216,17 +216,17 @@ def get_log(log, threshold, excludes, showstat):
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
             else:
-                print(f'Attack with threshold ({ip_threshold}) conditions  not detected.')
+                print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
 
 
 def arg_parse():
-    parser = argparse.ArgumentParser(description=arf_default_msg)
-    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=export_command)
-    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=ctl_log_file)
-    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=ip_threshold)
+    parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
+    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
+    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=CTL_LOG_FILE)
+    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=IP_THRESHOLD)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
-                        default=ip_excludes)
+                        default=IP_EXCLUDES)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
     parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
@@ -239,12 +239,12 @@ def arg_parse():
 def main():
     args = arg_parse()
 
-    if not os.path.exists(drop_db):
+    if not os.path.exists(DROP_DB):
         create_db_schema()
 
-    ctl_log = f'{ctl_log_dir}/{args.logfile}'
+    ctl_log = f'{CTL_LOG_DIR}/{args.logfile}'
 
-    check_dir(ctl_log_dir)
+    check_dir(CTL_LOG_DIR)
     check_file(ctl_log)
 
     if args.stat:
