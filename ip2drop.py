@@ -22,8 +22,8 @@ CTL_LOG_DIR = f'{os.getcwd()}/log'
 EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
 
-DROP_DB = "db.sql"
-DROP_DB_SCHEMA = "db_schema.sql"
+DROP_DB = f'{os.getcwd()}/db.sql'
+DROP_DB_SCHEMA = f'{os.getcwd()}/db_schema.sql'
 ARG_DEFAULT_MSG = "Drop IP Information"
 
 ## Init Logger
