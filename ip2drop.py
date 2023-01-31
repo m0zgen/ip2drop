@@ -116,17 +116,28 @@ def create_db_schema():
             print(f'Checking {DROP_DB} schema: Done.')
 
 
-def add_drop_ip(ip, ip_int, status, timeout, date_added, group):
+def add_drop_ip(ip, ip_int, status, count, timeout, date_added, group):
     conn = sqlite3.connect(DROP_DB)
     cursor = conn.cursor()
-    params = (ip, ip_int, status, timeout, date_added, group)
-    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?)", params)
+    params = (ip, ip_int, status, count, timeout, date_added, group)
+    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?)", params)
     conn.commit()
     print('Drop Entry Created Successful')
     conn.close()
 
 
 # Status counting
+def get_drop_count(ip):
+    # SELECT status FROM ip2drop WHERE IP LIKE '179.60.147.157';
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    stat = cur.execute("SELECT status FROM ip2drop WHERE IP LIKE :IP", {'IP': ip})
+    result, = stat.fetchone()
+    # print(result)
+    conn.close()
+    return result
+
+
 def update_drop_status(status, ip):
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
@@ -253,7 +264,7 @@ def get_log(log, threshold, excludes, showstat):
                 else:
 
                     # TODO: Beed to remove this section
-                    print(f'Action: Drop: {ip} -> Threshold: {count}')
+                    print(f'\nAction: Drop: {ip} -> Threshold: {count}')
                     os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     log_warn(f'{ip} send to drop zone')
                     # Drop time
@@ -265,10 +276,13 @@ def get_log(log, threshold, excludes, showstat):
                     if ip_exist(ip):
                         print(f'Info: IP exist in Drop DB: {ip}')
                         log_info(f'IP exist in Drop DB: {ip}')
+                        # stat_count = get_drop_count(ip)
+                        # print(f'Count: {stat_count}')
+
                         # TODO: Get current 'status' and then +1
                         update_drop_status(11, ip)
                     else:
-                        add_drop_ip(ip, int_ip, 1, undropDate, currentDate, 'testing')
+                        add_drop_ip(ip, int_ip, 1, 1, undropDate, currentDate, 'testing')
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
