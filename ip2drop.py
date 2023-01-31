@@ -128,7 +128,26 @@ def add_drop_ip(ip, ip_int, status, count, timeout, date_added, group):
 
 # Status counting
 def get_drop_count(ip):
-    # SELECT status FROM ip2drop WHERE IP LIKE '179.60.147.157';
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    count = cur.execute("SELECT count FROM ip2drop WHERE IP LIKE :IP", {'IP': ip})
+    result, = count.fetchone()
+    # print(result)
+    conn.close()
+    return result
+
+
+def update_drop_count(count, ip):
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
+    cur.execute("""UPDATE ip2drop SET COUNT = :COUNT WHERE IP =:IP """, {'STATUS': count, 'IP': ip})
+    conn.commit()
+    print("Update Status Successful")
+    conn.close()
+
+
+def get_drop_status(ip):
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     stat = cur.execute("SELECT status FROM ip2drop WHERE IP LIKE :IP", {'IP': ip})
