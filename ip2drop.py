@@ -346,12 +346,15 @@ def arg_parse():
 def main():
     args = arg_parse()
 
+    # Create db if not exists
     if not os.path.exists(DB_DIR):
         check_dir(DB_DIR)
         create_db_schema()
 
+    # Log file for command processing
     ctl_log = os.path.join(EXPORTED_LOGS_DIR, args.logfile)
 
+    # Checking & creating needed dirs and files
     check_dir(EXPORTED_LOGS_DIR)
     check_file(ctl_log)
 
