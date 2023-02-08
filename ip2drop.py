@@ -238,12 +238,6 @@ def increment(number):
     return number
 
 
-# def validate_ip(ip):
-#     # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
-#     iptools.ipv4.validate_ip(ip) #returns bool
-#     # iptools.ipv6.validate_ip(ipv6) #returns bool
-#     # TODO: need to add validation logic
-
 def delete_ip(ip):
     if ip_exist(ip):
         print(f'IP: {ip} will be deleted')
@@ -259,6 +253,14 @@ def export_log(command, desctination):
     os.system(command + ' > ' + desctination)
 
 
+# def validate_ip(ip):
+#     # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
+#     iptools.ipv4.validate_ip(ip) #returns bool
+#     # iptools.ipv6.validate_ip(ipv6) #returns bool
+#     # TODO: need to add validation logic
+
+# General
+
 def get_log(log, threshold, excludes, showstat):
     print(f'Info: Processing log: {log}')
     log_info(f'Processing log: {log}')
@@ -266,7 +268,6 @@ def get_log(log, threshold, excludes, showstat):
 
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
-
         exclude_from_check = excludes.split(' ')
         # print(exclude_from_check)
 
@@ -285,8 +286,8 @@ def get_log(log, threshold, excludes, showstat):
                 # print(frop_int)
                 increment(found_count)
                 if showstat:
-                    print(f'Show stat found (without drop): {ip} -> Threshold: {count}')
-                    log_info(f'Action without drop. Found: {ip} -> Threshold: {count}')
+                    print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
+                    log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
                     found_count = increment(found_count)
                     # TODO: need to coding
                 else:
@@ -341,6 +342,7 @@ def arg_parse():
     return parser.parse_args()
 
 
+# Main  
 def main():
     args = arg_parse()
 
@@ -379,4 +381,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
+
