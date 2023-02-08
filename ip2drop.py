@@ -232,6 +232,11 @@ def extract_ip(line):
     ip = pattern.search(line)[0]
     return ip
 
+# Services
+def increment(number):
+    number += 1
+    return number
+
 
 # def validate_ip(ip):
 #     # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
@@ -257,6 +262,7 @@ def export_log(command, desctination):
 def get_log(log, threshold, excludes, showstat):
     print(f'Info: Processing log: {log}')
     log_info(f'Processing log: {log}')
+    found_count = 0
 
     with open(log, "r") as f:
         ips = Counter(extract_ip(line) for line in f)
@@ -269,6 +275,7 @@ def get_log(log, threshold, excludes, showstat):
             if ip in exclude_from_check:
                 print(f'Info: Found Ignored IP: {ip}')
                 log_info(f'Found Ignored IP: {ip}')
+                found_count = increment(found_count)
 
             elif count >= threshold:
                 int_ip = int(ipaddress.IPv4Address(ip))
@@ -276,9 +283,11 @@ def get_log(log, threshold, excludes, showstat):
 
                 frop_int = ipaddress.IPv4Address(int_ip)
                 # print(frop_int)
+                increment(found_count)
                 if showstat:
-                    print(f'Show stat found: {ip} -> Threshold: {count}')
+                    print(f'Show stat found (without drop): {ip} -> Threshold: {count}')
                     log_info(f'Action without drop. Found: {ip} -> Threshold: {count}')
+                    found_count = increment(found_count)
                     # TODO: need to coding
                 else:
 
@@ -305,8 +314,14 @@ def get_log(log, threshold, excludes, showstat):
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
+                    found_count = increment(found_count)
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
+    if found_count == 0:
+        log_info(f'Info: Thread does not found.')
+        print(f'Info: Thread does not found.')
+
+    # print(f'Found count: {found_count}')
 
 
 def arg_parse():
