@@ -216,6 +216,10 @@ def print_db_entries():
 
 
 ## Firewall Operations
+def add_ip_to_firewalld(ip)
+    os.system("firewall-cmd --zone=drop --add-source=" + ip)
+    log_warn(f'{ip} added to firewalld.')
+
 
 def remove_ip_from_firewall(ip):
     os.system("firewall-cmd --zone=drop --remove-source=" + ip)
@@ -260,7 +264,6 @@ def export_log(command, desctination):
 #     # TODO: need to add validation logic
 
 # General
-
 def get_log(log, threshold, excludes, showstat):
     print(f'Info: Processing log: {log}')
     log_info(f'Processing log: {log}')
@@ -280,22 +283,20 @@ def get_log(log, threshold, excludes, showstat):
 
             elif count >= threshold:
                 int_ip = int(ipaddress.IPv4Address(ip))
-                # print(int_ip)
-
-                frop_int = ipaddress.IPv4Address(int_ip)
-                # print(frop_int)
-                increment(found_count)
+                # IP from int converter
+                from_int = ipaddress.IPv4Address(int_ip)
+                # print(from_int)
+                found_count = increment(found_count)
                 if showstat:
                     print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
                     log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
                     found_count = increment(found_count)
                     # TODO: need to coding
                 else:
-
-                    # TODO: Beed to remove this section
+                    # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-                    os.system("firewall-cmd --zone=drop --add-source=" + ip)
-                    log_warn(f'{ip} send to drop zone')
+                    add_ip_to_firewalld(ip)
+
                     # Drop time
                     currentDate = datetime.datetime.now()
                     # Drop end
@@ -309,8 +310,10 @@ def get_log(log, threshold, excludes, showstat):
                         # print(f'Count: {stat_count}')
 
                         # TODO: Get current 'status' and then +1
+                        # TODO: Get current time and expire time
                         update_drop_status(11, ip)
                     else:
+                        # Add to DB
                         add_drop_ip(ip, int_ip, 1, 1, undropDate, currentDate, 'testing')
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
@@ -324,7 +327,7 @@ def get_log(log, threshold, excludes, showstat):
 
     # print(f'Found count: {found_count}')
 
-
+# Arguments parser
 def arg_parse():
     parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
@@ -382,7 +385,6 @@ def main():
     export_log(args.command, ctl_log)
     get_log(ctl_log, args.threshold, args.excludes, args.stat)
 
-
+# Init starter
 if __name__ == "__main__":
     raise SystemExit(main())
-
