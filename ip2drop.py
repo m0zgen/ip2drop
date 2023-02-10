@@ -15,34 +15,37 @@ import logging
 
 ## Vars
 
+# ip2drop drop conditions
 IP_TIMEOUT = 10
 IP_THRESHOLD = 150
 EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
 
-# Script works dirs
-BASE_DIR = os.path.dirname(__file__)
+# ip2drop work catalogs
+# BASE_DIR = os.path.dirname(__file__)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Relatives
+# Relative paths
 RELATIVE_SRC_DIR = "src/"
 RELATIVE_DB_DIR = "db/"
 RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
 
-# Paths
+# Working paths
+DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
 SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
 CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
-DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
 
-# Export command log
+# Default log file
 CTL_LOG_FILE = "ip2drop.log"
 
+# Database
 DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
-## Init Logger
+# Logger
 
 # TODO: Add -v, --verbose as DEBUG mode
 # Script logger
@@ -125,6 +128,14 @@ def add_drop_ip(ip, ip_int, status, count, timeout, date_added, group):
     print('Drop Entry Created Successful')
     conn.close()
 
+def get_timeout(ip):
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    count = cur.execute("SELECT timeout FROM ip2drop WHERE IP LIKE :IP", {'IP': ip})
+    result, = count.fetchone()
+    # print(result)
+    conn.close()
+    return result
 
 # Status counting
 def get_drop_count(ip):
@@ -178,7 +189,7 @@ def delete_dropped_ip(ip):
     conn.close()
 
 
-# TODO: Get info dor dropped IP
+# TODO: Get info from dropped IP
 def get_drop_ip(ip):
     conn = sqlite3.connect(DROP_DB)
     response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
@@ -216,7 +227,7 @@ def print_db_entries():
 
 
 ## Firewall Operations
-def add_ip_to_firewalld(ip)
+def add_ip_to_firewalld(ip):
     os.system("firewall-cmd --zone=drop --add-source=" + ip)
     log_warn(f'{ip} added to firewalld.')
 
@@ -226,6 +237,7 @@ def remove_ip_from_firewall(ip):
     log_warn(f'{ip} removed from firewalld.')
 
 
+# Log parsing
 def get_ip(line):
     ip = line.split(" ")[9]
     return ip
@@ -276,42 +288,57 @@ def get_log(log, threshold, excludes, showstat):
 
         for ip, count in ips.items():
             # print(ip, '->', count)
+
+            # Checking excludes list
             if ip in exclude_from_check:
                 print(f'Info: Found Ignored IP: {ip}')
                 log_info(f'Found Ignored IP: {ip}')
                 found_count = increment(found_count)
 
+            # Checking threshold
             elif count >= threshold:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
                 found_count = increment(found_count)
+
+                # Show threshold statistic without drop (arg: -s)
                 if showstat:
                     print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
                     log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
                     found_count = increment(found_count)
-                    # TODO: need to coding
+
                 else:
                     # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-                    add_ip_to_firewalld(ip)
-
                     # Drop time
                     currentDate = datetime.datetime.now()
                     # Drop end
                     undropDate = currentDate + datetime.timedelta(seconds=IP_TIMEOUT)
+                    # Ban
+                    add_ip_to_firewalld(ip)
 
-                    # Check true
+                    # IN DEVELOP:
                     if ip_exist(ip):
                         print(f'Info: IP exist in Drop DB: {ip}')
                         log_info(f'IP exist in Drop DB: {ip}')
+
+
                         # stat_count = get_drop_count(ip)
                         # print(f'Count: {stat_count}')
 
-                        # TODO: Get current 'status' and then +1
+                        # TODO: Get current 'status' and then +1 (get_drop_status)
+                        # TODO: Get undropTime if
                         # TODO: Get current time and expire time
-                        update_drop_status(11, ip)
+                        current_timeout = get_timeout(ip)
+                        current_count = get_drop_count(ip)
+
+                        # print(f'Timeout {current_timeout}, Count: {current_count}')
+
+                        update_drop_status(2, ip)
+
+                        # TODO: Add and update drop counts
                     else:
                         # Add to DB
                         add_drop_ip(ip, int_ip, 1, 1, undropDate, currentDate, 'testing')
