@@ -45,6 +45,9 @@ DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
+# Datetime
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+
 # Logger
 
 # TODO: Add -v, --verbose as DEBUG mode
@@ -253,6 +256,9 @@ def increment(number):
     number += 1
     return number
 
+def get_current_time():
+    return datetime.datetime.now()
+
 
 def delete_ip(ip):
     if ip_exist(ip):
@@ -313,7 +319,7 @@ def get_log(log, threshold, excludes, showstat):
                     # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
                     # Drop time
-                    currentDate = datetime.datetime.now()
+                    currentDate = get_current_time()
                     # Drop end
                     undropDate = currentDate + datetime.timedelta(seconds=IP_TIMEOUT)
                     # Ban
@@ -326,10 +332,23 @@ def get_log(log, threshold, excludes, showstat):
                         current_count = get_drop_count(ip)
 
                         # Fromet: 2023-02-11 18:27:50.192957
-                        datetime_format = '%Y-%m-%d %H:%M:%S.%f'
-                        time_difference = currentDate - datetime.datetime.strptime(current_timeout, datetime_format)
+                        time_difference = currentDate - datetime.datetime.strptime(current_timeout, DATETIME_FORMAT)
+                        total_seconds = time_difference.total_seconds()
 
-                        # print(f'Timeout: {time_difference}')
+                        log_time_format = '%H:%M:%S'
+                        
+                        # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
+                        end_checking_time = get_current_time().strftime('%H:%M:%S')
+
+                        datetime_obj = datetime.datetime.strptime(current_timeout, 
+                                 DATETIME_FORMAT)
+
+                        time = datetime_obj.time()
+                        time = str(time).split('.')[0]
+
+                        print(f'Start time: {time}, End time: {end_checking_time}')
+
+                        print(f'Current timeout: {current_timeout}, Timeout: {time_difference}, Total seconds: {total_seconds}')
 
                         print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
                         log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
