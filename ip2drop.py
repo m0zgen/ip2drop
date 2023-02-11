@@ -344,7 +344,7 @@ def get_log(log, threshold, excludes, showstat):
                         current_timeout = get_timeout(ip)
                         current_count = get_drop_count(ip)
 
-                        # Fromet: 2023-02-11 18:27:50.192957
+                        # Format: 2023-02-11 18:27:50.192957
                         time_difference = current_date - datetime.datetime.strptime(current_timeout, DATETIME_FORMAT)
                         total_seconds = time_difference.total_seconds()
 
@@ -451,7 +451,9 @@ def main():
     log_info(f'ip2drop started with params:')
     log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
+    # Execute command with export results to log
     export_log(args.command, ctl_log)
+    # Exported log processing
     get_log(ctl_log, args.threshold, args.excludes, args.stat)
 
 
