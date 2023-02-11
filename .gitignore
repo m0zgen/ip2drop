@@ -1,6 +1,7 @@
 # IDEs
 .idea
 .fleet
+.code
 
 # DIRs
 logs
