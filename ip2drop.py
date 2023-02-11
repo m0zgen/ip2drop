@@ -284,8 +284,8 @@ def delete_ip(ip):
         log_info(f'IP: {ip} not exist in DB')
 
 
-def export_log(command, desctination):
-    os.system(command + ' > ' + desctination)
+def export_log(command, destination):
+    os.system(command + ' > ' + destination)
 
 
 # def validate_ip(ip):
