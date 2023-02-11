@@ -8,10 +8,11 @@ import os
 import re
 import sqlite3
 import ipaddress
-from collections import Counter
 import datetime
 import argparse
 import logging
+from collections import Counter
+from sys import platform
 
 ## Vars
 
@@ -48,11 +49,21 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 # Datetime
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
+# Detect system
+if platform == "linux" or platform == "linux2":
+    SYSTEM_LOG = '/var/log/ip2drop.log'
+elif platform == "darwin":
+    SYSTEM_LOG = os.path.join(EXPORTED_LOGS_DIR, 'ip2drop-script.log')
+elif platform == "win32":
+    print('Platform not supported. Exit. Bye.')
+    exit(1)
+
 # Logger
 
 # TODO: Add -v, --verbose as DEBUG mode
 # Script logger
-logging.basicConfig(filename='/var/log/ip2drop.log',
+
+logging.basicConfig(filename=SYSTEM_LOG,
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt='%d-%m-%Y %H-%M-%S',
