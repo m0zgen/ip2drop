@@ -321,8 +321,20 @@ def get_log(log, threshold, excludes, showstat):
 
                     # IN DEVELOP:
                     if ip_exist(ip):
-                        print(f'Info: IP exist in Drop DB: {ip}')
-                        log_info(f'IP exist in Drop DB: {ip}')
+
+                        current_timeout = get_timeout(ip)
+                        current_count = get_drop_count(ip)
+
+                        # Fromet: 2023-02-11 18:27:50.192957
+                        datetime_format = '%Y-%m-%d %H:%M:%S.%f'
+                        time_difference = currentDate - datetime.datetime.strptime(current_timeout, datetime_format)
+
+                        # print(f'Timeout: {time_difference}')
+
+                        print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
+                        log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
+
+
 
 
                         # stat_count = get_drop_count(ip)
@@ -331,8 +343,7 @@ def get_log(log, threshold, excludes, showstat):
                         # TODO: Get current 'status' and then +1 (get_drop_status)
                         # TODO: Get undropTime if
                         # TODO: Get current time and expire time
-                        current_timeout = get_timeout(ip)
-                        current_count = get_drop_count(ip)
+                        
 
                         # print(f'Timeout {current_timeout}, Count: {current_count}')
 
