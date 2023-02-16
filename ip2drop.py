@@ -2,18 +2,19 @@
 # Author: Yevgeniy Goncharov, https://lab.sys-adm.in
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 
-## Imports
+# Imports
 
 import os
 import re
 import sqlite3
 import ipaddress
-from collections import Counter
 import datetime
 import argparse
 import logging
+from collections import Counter
+from sys import platform
 
-## Vars
+# Vars
 
 # ip2drop drop conditions
 IP_TIMEOUT = 10
@@ -45,17 +46,27 @@ DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
-# Logger
+# Datetime
+DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
+# Detect system/platform
+if platform == "linux" or platform == "linux2":
+    SYSTEM_LOG = '/var/log/ip2drop.log'
+elif platform == "darwin":
+    SYSTEM_LOG = os.path.join(EXPORTED_LOGS_DIR, 'ip2drop-script.log')
+elif platform == "win32":
+    print('Platform not supported. Exit. Bye.')
+    exit(1)
+
+# Logger
 # TODO: Add -v, --verbose as DEBUG mode
-# Script logger
-logging.basicConfig(filename='/var/log/ip2drop.log',
+logging.basicConfig(filename=SYSTEM_LOG,
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt='%d-%m-%Y %H-%M-%S',
                     level=logging.DEBUG)
 
-
+# Logger messages
 def log_debug(msg):
     logging.debug(msg)
 
@@ -81,8 +92,8 @@ def log_crit(msg):
 # FS Operations
 
 def check_dir(dest):
-    isExist = os.path.exists(dest)
-    if not isExist:
+    is_exist = os.path.exists(dest)
+    if not is_exist:
         # Create a new directory because it does not exist
         os.makedirs(dest)
         print(f'Log catalog: {dest} created. Done.')
@@ -95,7 +106,35 @@ def check_file(file):
         print(f'Log file: {file} created. Done.')
 
 
-## DB Operations
+def check_start_end(current_timeout, time_difference, log):
+    
+    # Timing processes
+    log_time_format = '%H:%M:%S'
+
+    # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
+    end_checking_time = get_current_time().strftime('%H:%M:%S')
+
+    datetime_obj = datetime.datetime.strptime(current_timeout,
+                                                DATETIME_FORMAT)
+
+    time = datetime_obj.time()
+    time = str(time).split('.')[0]
+
+    print(f'Start time: {time}, End time: {end_checking_time}')
+
+    print(
+        f'Current timeout: {current_timeout}, Timeout: {time_difference}')
+
+    # stat_count = get_drop_count(ip)
+    # print(f'Count: {stat_count}')
+
+    # TODO: Get current 'status' and then +1 (get_drop_status)
+    # TODO: Get undropTime if
+    # TODO: Get current time and expire time
+
+    # print(f'Timeout {current_timeout}, Count: {current_count}')
+
+# DB Operations
 
 # TODO: Proccess db operation to def
 # Add db.sql exists testing
@@ -110,7 +149,7 @@ def create_db_schema():
             schema = f.read()
             conn.executescript(schema)
         # print("Done")
-        conn.close()
+        # conn.close()
     except sqlite3.Error as error:
         print("Error while creating a sqlite table", error)
     finally:
@@ -128,6 +167,7 @@ def add_drop_ip(ip, ip_int, status, count, timeout, date_added, group):
     print('Drop Entry Created Successful')
     conn.close()
 
+
 def get_timeout(ip):
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
@@ -136,6 +176,7 @@ def get_timeout(ip):
     # print(result)
     conn.close()
     return result
+
 
 # Status counting
 def get_drop_count(ip):
@@ -178,7 +219,7 @@ def update_drop_status(status, ip):
     conn.close()
 
 
-## TODO: Checking already banned
+# TODO: Checking already banned
 
 def delete_dropped_ip(ip):
     conn = sqlite3.connect(DROP_DB)
@@ -226,7 +267,7 @@ def print_db_entries():
     conn.close()
 
 
-## Firewall Operations
+# Firewall Operations
 def add_ip_to_firewalld(ip):
     os.system("firewall-cmd --zone=drop --add-source=" + ip)
     log_warn(f'{ip} added to firewalld.')
@@ -248,10 +289,15 @@ def extract_ip(line):
     ip = pattern.search(line)[0]
     return ip
 
+
 # Services
 def increment(number):
     number += 1
     return number
+
+
+def get_current_time():
+    return datetime.datetime.now()
 
 
 def delete_ip(ip):
@@ -265,8 +311,9 @@ def delete_ip(ip):
         log_info(f'IP: {ip} not exist in DB')
 
 
-def export_log(command, desctination):
-    os.system(command + ' > ' + desctination)
+def export_log(command, destination):
+    os.system(command + ' > ' + destination)
+
 
 
 # def validate_ip(ip):
@@ -313,9 +360,9 @@ def get_log(log, threshold, excludes, showstat):
                     # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
                     # Drop time
-                    currentDate = datetime.datetime.now()
+                    current_date = get_current_time()
                     # Drop end
-                    undropDate = currentDate + datetime.timedelta(seconds=IP_TIMEOUT)
+                    undrop_date = current_date + datetime.timedelta(seconds=IP_TIMEOUT)
                     # Ban
                     add_ip_to_firewalld(ip)
 
@@ -325,34 +372,23 @@ def get_log(log, threshold, excludes, showstat):
                         current_timeout = get_timeout(ip)
                         current_count = get_drop_count(ip)
 
-                        # Fromet: 2023-02-11 18:27:50.192957
-                        datetime_format = '%Y-%m-%d %H:%M:%S.%f'
-                        time_difference = currentDate - datetime.datetime.strptime(current_timeout, datetime_format)
-
+                        # Format: 2023-02-11 18:27:50.192957
+                        time_difference = current_date - datetime.datetime.strptime(current_timeout, DATETIME_FORMAT)
+                        total_seconds = time_difference.total_seconds()
                         # print(f'Timeout: {time_difference}')
+                        # print(f'Total seconds: {total_seconds}')
+                        # check_start_end(current_count, time_difference, log)
 
+                        # TODO: Add and update drop counts
+                        
                         print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
                         log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
 
-
-
-
-                        # stat_count = get_drop_count(ip)
-                        # print(f'Count: {stat_count}')
-
-                        # TODO: Get current 'status' and then +1 (get_drop_status)
-                        # TODO: Get undropTime if
-                        # TODO: Get current time and expire time
-                        
-
-                        # print(f'Timeout {current_timeout}, Count: {current_count}')
-
                         update_drop_status(2, ip)
 
-                        # TODO: Add and update drop counts
                     else:
                         # Add to DB
-                        add_drop_ip(ip, int_ip, 1, 1, undropDate, currentDate, 'testing')
+                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, current_date, 'testing')
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
@@ -364,6 +400,7 @@ def get_log(log, threshold, excludes, showstat):
         print(f'Info: Thread does not found.')
 
     # print(f'Found count: {found_count}')
+
 
 # Arguments parser
 def arg_parse():
@@ -420,8 +457,11 @@ def main():
     log_info(f'ip2drop started with params:')
     log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
+    # Execute command with export results to log
     export_log(args.command, ctl_log)
+    # Exported log processing
     get_log(ctl_log, args.threshold, args.excludes, args.stat)
+
 
 # Init starter
 if __name__ == "__main__":

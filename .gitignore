@@ -1,6 +1,7 @@
 # IDEs
 .idea
 .fleet
+.code
 
 # DIRs
 logs
@@ -8,3 +9,9 @@ db
 
 # DB
 db.sql
+
+# Tests
+tests
+test
+temp
+tmp
