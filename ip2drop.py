@@ -49,7 +49,7 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 # Datetime
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
-# Detect system
+# Detect system/platform
 if platform == "linux" or platform == "linux2":
     SYSTEM_LOG = '/var/log/ip2drop.log'
 elif platform == "darwin":
@@ -59,7 +59,6 @@ elif platform == "win32":
     exit(1)
 
 # Logger
-
 # TODO: Add -v, --verbose as DEBUG mode
 logging.basicConfig(filename=SYSTEM_LOG,
                     filemode='a',
@@ -67,7 +66,7 @@ logging.basicConfig(filename=SYSTEM_LOG,
                     datefmt='%d-%m-%Y %H-%M-%S',
                     level=logging.DEBUG)
 
-
+# Logger messages
 def log_debug(msg):
     logging.debug(msg)
 
@@ -106,6 +105,34 @@ def check_file(file):
         open(file, 'w').close()
         print(f'Log file: {file} created. Done.')
 
+
+def check_start_end(current_timeout, time_difference, log):
+    
+    # Timing processes
+    log_time_format = '%H:%M:%S'
+
+    # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
+    end_checking_time = get_current_time().strftime('%H:%M:%S')
+
+    datetime_obj = datetime.datetime.strptime(current_timeout,
+                                                DATETIME_FORMAT)
+
+    time = datetime_obj.time()
+    time = str(time).split('.')[0]
+
+    print(f'Start time: {time}, End time: {end_checking_time}')
+
+    print(
+        f'Current timeout: {current_timeout}, Timeout: {time_difference}')
+
+    # stat_count = get_drop_count(ip)
+    # print(f'Count: {stat_count}')
+
+    # TODO: Get current 'status' and then +1 (get_drop_status)
+    # TODO: Get undropTime if
+    # TODO: Get current time and expire time
+
+    # print(f'Timeout {current_timeout}, Count: {current_count}')
 
 # DB Operations
 
@@ -288,6 +315,7 @@ def export_log(command, destination):
     os.system(command + ' > ' + destination)
 
 
+
 # def validate_ip(ip):
 #     # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
 #     iptools.ipv4.validate_ip(ip) #returns bool
@@ -347,39 +375,17 @@ def get_log(log, threshold, excludes, showstat):
                         # Format: 2023-02-11 18:27:50.192957
                         time_difference = current_date - datetime.datetime.strptime(current_timeout, DATETIME_FORMAT)
                         total_seconds = time_difference.total_seconds()
+                        # print(f'Timeout: {time_difference}')
+                        # print(f'Total seconds: {total_seconds}')
+                        # check_start_end(current_count, time_difference, log)
 
-                        log_time_format = '%H:%M:%S'
-
-                        # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
-                        end_checking_time = get_current_time().strftime('%H:%M:%S')
-
-                        datetime_obj = datetime.datetime.strptime(current_timeout,
-                                                                  DATETIME_FORMAT)
-
-                        time = datetime_obj.time()
-                        time = str(time).split('.')[0]
-
-                        print(f'Start time: {time}, End time: {end_checking_time}')
-
-                        print(
-                            f'Current timeout: {current_timeout}, Timeout: {time_difference}, '
-                            f'Total seconds: {total_seconds}')
-
+                        # TODO: Add and update drop counts
+                        
                         print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
                         log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
 
-                        # stat_count = get_drop_count(ip)
-                        # print(f'Count: {stat_count}')
-
-                        # TODO: Get current 'status' and then +1 (get_drop_status)
-                        # TODO: Get undropTime if
-                        # TODO: Get current time and expire time
-
-                        # print(f'Timeout {current_timeout}, Count: {current_count}')
-
                         update_drop_status(2, ip)
 
-                        # TODO: Add and update drop counts
                     else:
                         # Add to DB
                         add_drop_ip(ip, int_ip, 1, 1, undrop_date, current_date, 'testing')
