@@ -88,6 +88,11 @@ def log_crit(msg):
     logging.critical(msg)
 
 
+def msg_info(msg):
+    log_info(msg)
+    print(msg)
+
+
 # Actions
 
 # FS Operations
