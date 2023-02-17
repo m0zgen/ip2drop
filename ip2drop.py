@@ -6,11 +6,12 @@
 
 import os
 import re
-import sqlite3
+import argparse
 import ipaddress
 import datetime
-import argparse
 import logging
+import subprocess
+import sqlite3
 from collections import Counter
 from sys import platform
 
@@ -47,7 +48,8 @@ DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Datetime
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+TODAY = datetime.date.today()
 
 # Detect system/platform
 if platform == "linux" or platform == "linux2":
@@ -65,6 +67,7 @@ logging.basicConfig(filename=SYSTEM_LOG,
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                     datefmt='%d-%m-%Y %H-%M-%S',
                     level=logging.DEBUG)
+
 
 # Logger messages
 def log_debug(msg):
@@ -87,6 +90,11 @@ def log_crit(msg):
     logging.critical(msg)
 
 
+def msg_info(msg):
+    log_info(msg)
+    print(msg)
+
+
 # Actions
 
 # FS Operations
@@ -107,7 +115,6 @@ def check_file(file):
 
 
 def check_start_end(current_timeout, time_difference, log):
-    
     # Timing processes
     log_time_format = '%H:%M:%S'
 
@@ -115,7 +122,7 @@ def check_start_end(current_timeout, time_difference, log):
     end_checking_time = get_current_time().strftime('%H:%M:%S')
 
     datetime_obj = datetime.datetime.strptime(current_timeout,
-                                                DATETIME_FORMAT)
+                                              DATETIME_DEFAULT_FORMAT)
 
     time = datetime_obj.time()
     time = str(time).split('.')[0]
@@ -133,6 +140,7 @@ def check_start_end(current_timeout, time_difference, log):
     # TODO: Get current time and expire time
 
     # print(f'Timeout {current_timeout}, Count: {current_count}')
+
 
 # DB Operations
 
@@ -296,8 +304,20 @@ def increment(number):
     return number
 
 
+def get_current_date():
+    return datetime.date.today()
+
+
 def get_current_time():
     return datetime.datetime.now()
+
+
+# Ref: https://stackoverflow.com/questions/37487758/how-to-add-an-id-to-filename-before-extension
+def append_id(filename):
+    name, ext = os.path.splitext(filename)
+    result = "{name}_{uid}{ext}".format(name=name, uid=TODAY.strftime("%d_%m_%Y"), ext=ext)
+    # msg_info(f'Result: {result}')
+    return result
 
 
 def delete_ip(ip):
@@ -315,7 +335,6 @@ def export_log(command, destination):
     os.system(command + ' > ' + destination)
 
 
-
 # def validate_ip(ip):
 #     # https://stackoverflow.com/questions/3462784/check-if-a-string-matches-an-ip-address-pattern-in-python
 #     iptools.ipv4.validate_ip(ip) #returns bool
@@ -324,8 +343,7 @@ def export_log(command, destination):
 
 # General
 def get_log(log, threshold, excludes, showstat):
-    print(f'Info: Processing log: {log}')
-    log_info(f'Processing log: {log}')
+    msg_info(f'Info: Processing log: {log}')
     found_count = 0
 
     with open(log, "r") as f:
@@ -338,8 +356,7 @@ def get_log(log, threshold, excludes, showstat):
 
             # Checking excludes list
             if ip in exclude_from_check:
-                print(f'Info: Found Ignored IP: {ip}')
-                log_info(f'Found Ignored IP: {ip}')
+                msg_info(f'Info: Found Ignored IP: {ip}')
                 found_count = increment(found_count)
 
             # Checking threshold
@@ -373,14 +390,15 @@ def get_log(log, threshold, excludes, showstat):
                         current_count = get_drop_count(ip)
 
                         # Format: 2023-02-11 18:27:50.192957
-                        time_difference = current_date - datetime.datetime.strptime(current_timeout, DATETIME_FORMAT)
+                        time_difference = current_date - datetime.datetime.strptime(current_timeout,
+                                                                                    DATETIME_DEFAULT_FORMAT)
                         total_seconds = time_difference.total_seconds()
                         # print(f'Timeout: {time_difference}')
                         # print(f'Total seconds: {total_seconds}')
                         # check_start_end(current_count, time_difference, log)
 
                         # TODO: Add and update drop counts
-                        
+
                         print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
                         log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
 
@@ -420,7 +438,7 @@ def arg_parse():
     return parser.parse_args()
 
 
-# Main  
+# Main
 def main():
     args = arg_parse()
 
@@ -430,7 +448,8 @@ def main():
         create_db_schema()
 
     # Log file for command processing
-    ctl_log = os.path.join(EXPORTED_LOGS_DIR, args.logfile)
+    today_log = append_id(args.logfile)
+    ctl_log = os.path.join(EXPORTED_LOGS_DIR, today_log)
 
     # Checking & creating needed dirs and files
     check_dir(EXPORTED_LOGS_DIR)
