@@ -6,11 +6,12 @@
 
 import os
 import re
-import sqlite3
+import argparse
 import ipaddress
 import datetime
-import argparse
 import logging
+import subprocess
+import sqlite3
 from collections import Counter
 from sys import platform
 
