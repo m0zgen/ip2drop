@@ -48,7 +48,7 @@ DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Datetime
-DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 # Detect system/platform
 if platform == "linux" or platform == "linux2":
@@ -116,7 +116,7 @@ def check_start_end(current_timeout, time_difference, log):
     end_checking_time = get_current_time().strftime('%H:%M:%S')
 
     datetime_obj = datetime.datetime.strptime(current_timeout,
-                                                DATETIME_FORMAT)
+                                              DATETIME_DEFAULT_FORMAT)
 
     time = datetime_obj.time()
     time = str(time).split('.')[0]
@@ -297,6 +297,10 @@ def increment(number):
     return number
 
 
+def get_current_date():
+    return datetime.date.today()
+
+
 def get_current_time():
     return datetime.datetime.now()
 
@@ -374,7 +378,7 @@ def get_log(log, threshold, excludes, showstat):
                         current_count = get_drop_count(ip)
 
                         # Format: 2023-02-11 18:27:50.192957
-                        time_difference = current_date - datetime.datetime.strptime(current_timeout, DATETIME_FORMAT)
+                        time_difference = current_date - datetime.datetime.strptime(current_timeout, DATETIME_DEFAULT_FORMAT)
                         total_seconds = time_difference.total_seconds()
                         # print(f'Timeout: {time_difference}')
                         # print(f'Total seconds: {total_seconds}')
