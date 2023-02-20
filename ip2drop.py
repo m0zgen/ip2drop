@@ -22,6 +22,7 @@ IP_TIMEOUT = 10
 IP_THRESHOLD = 150
 EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
+IPSET_NAME = "ip2drop"
 
 # ip2drop work catalogs
 # BASE_DIR = os.path.dirname(__file__)
@@ -32,11 +33,13 @@ RELATIVE_SRC_DIR = "src/"
 RELATIVE_DB_DIR = "db/"
 RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
+RELATIVE_HELPERS_DIR = "helpers/"
 
 # Working paths
 DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
 SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
 CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
+HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
 
 # Default log file
@@ -441,6 +444,11 @@ def arg_parse():
 # Main
 def main():
     args = arg_parse()
+
+    # Dirty step
+    # TODO: Need to make more beauty)
+    subprocess.run([HELPERS_DIR + "set-ipset.sh",
+                IPSET_NAME])
 
     # Create db if not exists
     if not os.path.exists(DB_DIR):
