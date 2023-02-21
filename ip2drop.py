@@ -23,6 +23,7 @@ IP_THRESHOLD = 150
 EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
 IPSET_NAME = "ip2drop"
+IPSET_ENABLED = False
 
 # ip2drop work catalogs
 # BASE_DIR = os.path.dirname(__file__)
@@ -447,7 +448,8 @@ def main():
 
     # Dirty step
     # TODO: Need to make more beauty)
-    subprocess.run([HELPERS_DIR + "set-ipset.sh",
+    if IPSET_ENABLED:
+        subprocess.run([HELPERS_DIR + "set-ipset.sh",
                 IPSET_NAME])
 
     # Create db if not exists
