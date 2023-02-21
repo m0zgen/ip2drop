@@ -8,7 +8,7 @@ logs
 db
 
 # Files
-ipset_status_done
+helpers/ipset_status_done
 
 # DB
 db.sql
