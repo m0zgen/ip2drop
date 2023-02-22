@@ -12,22 +12,14 @@ import datetime
 import logging
 import subprocess
 import sqlite3
+import configparser
+import shlex
 from collections import Counter
 from sys import platform
 
-# Vars
-
-# ip2drop drop conditions
-IP_TIMEOUT = 10
-IP_THRESHOLD = 150
-EXPORT_COMMAND = "journalctl -u ssh -S today --no-tail | grep 'Failed password'"
-IP_EXCLUDES = "127.0.0.1 1.1.1.1 "
-IPSET_NAME = "ip2drop"
-IPSET_ENABLED = False
-
-# ip2drop work catalogs
-# BASE_DIR = os.path.dirname(__file__)
+# Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IP2DROP_ENV = os.environ["IP2DROP_ENV"]
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -36,22 +28,36 @@ RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
 RELATIVE_HELPERS_DIR = "helpers/"
 
-# Working paths
+# Load CONFIG
+CONFIG = configparser.ConfigParser()
+CONFIG.read(os.path.join(BASE_DIR, 'config.ini'))
+
+# Load Options
+IP_TIMEOUT = CONFIG['DEFAULT']['IP_TIMEOUT']
+IP_THRESHOLD = CONFIG['DEFAULT']['IP_THRESHOLD']
+EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
+IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
+IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
+
+# print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
+
+# Set Working Paths
 DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
 SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
 CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
 HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
 
-# Default log file
+# Default log file name
 CTL_LOG_FILE = "ip2drop.log"
 
-# Database
+# Database Schema
 DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
-# Datetime
+# Datetime Format for Journalctl exported logs
 DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 TODAY = datetime.date.today()
 
@@ -102,6 +108,10 @@ def msg_info(msg):
 # Actions
 
 # FS Operations
+
+def bash_command(cmd):
+    subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+
 
 def check_dir(dest):
     is_exist = os.path.exists(dest)
@@ -336,7 +346,10 @@ def delete_ip(ip):
 
 
 def export_log(command, destination):
-    os.system(command + ' > ' + destination)
+    # os.system(command + ' > ' + destination)
+    cmd = shlex.split(command + destination)
+    # print(f'{cmd}')
+    bash_command(cmd)
 
 
 # def validate_ip(ip):
@@ -360,7 +373,7 @@ def get_log(log, threshold, excludes, showstat):
 
             # Checking excludes list
             if ip in exclude_from_check:
-                msg_info(f'Info: Found Ignored IP: {ip}')
+                msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = increment(found_count)
 
             # Checking threshold
@@ -469,7 +482,7 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
-        print('Mode: Print DB records')
+        msg_info(f'Mode: Print DB records. Current environment: {IP2DROP_ENV}')
         print_db_entries()
         exit(0)
 
