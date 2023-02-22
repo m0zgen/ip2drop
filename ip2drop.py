@@ -373,7 +373,7 @@ def get_log(log, threshold, excludes, showstat):
 
             # Checking excludes list
             if ip in exclude_from_check:
-                msg_info(f'Info: Found Ignored IP: {ip}')
+                msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = increment(found_count)
 
             # Checking threshold
