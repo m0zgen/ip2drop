@@ -11,7 +11,6 @@ import ipaddress
 import datetime
 import logging
 import subprocess
-from subprocess import Popen, PIPE
 import sqlite3
 import configparser
 import shlex
