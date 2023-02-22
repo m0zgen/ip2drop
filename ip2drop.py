@@ -19,7 +19,11 @@ from sys import platform
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IP2DROP_ENV = os.environ["IP2DROP_ENV"]
+try:
+   IP2DROP_ENV = os.environ["IP2DROP_ENV"]
+except KeyError:
+   print(f'Info: Env variable IP2DROP_ENV not defined')
+   IP2DROP_ENV = "None"
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
