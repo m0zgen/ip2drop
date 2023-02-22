@@ -11,8 +11,10 @@ import ipaddress
 import datetime
 import logging
 import subprocess
+from subprocess import Popen, PIPE
 import sqlite3
 import configparser
+import shlex
 from collections import Counter
 from sys import platform
 
@@ -106,6 +108,10 @@ def msg_info(msg):
 # Actions
 
 # FS Operations
+
+def bash_command(cmd):
+    subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+
 
 def check_dir(dest):
     is_exist = os.path.exists(dest)
@@ -340,7 +346,10 @@ def delete_ip(ip):
 
 
 def export_log(command, destination):
-    os.system(command + ' > ' + destination)
+    # os.system(command + ' > ' + destination)
+    cmd = shlex.split(command + destination)
+    # print(f'{cmd}')
+    bash_command(cmd)
 
 
 # def validate_ip(ip):
