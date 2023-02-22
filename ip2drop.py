@@ -11,6 +11,7 @@ import ipaddress
 import datetime
 import logging
 import subprocess
+from subprocess import Popen, PIPE
 import sqlite3
 import configparser
 import shlex
@@ -19,11 +20,6 @@ from sys import platform
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-try:
-   IP2DROP_ENV = os.environ["IP2DROP_ENV"]
-except KeyError:
-   print(f'Info: Env variable IP2DROP_ENV not defined')
-   IP2DROP_ENV = "None"
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -39,7 +35,8 @@ CONFIG.read(os.path.join(BASE_DIR, 'config.ini'))
 # Load Options
 IP_TIMEOUT = CONFIG['DEFAULT']['IP_TIMEOUT']
 IP_THRESHOLD = CONFIG['DEFAULT']['IP_THRESHOLD']
-EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+# EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
@@ -115,6 +112,12 @@ def msg_info(msg):
 
 def bash_command(cmd):
     subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+
+
+def bash_cmd(cmd):
+    subprocess.Popen(['/bin/bash', '-c', cmd])
+    # print(f'CMD: {cmd}')
+
 
 
 def check_dir(dest):
@@ -350,10 +353,12 @@ def delete_ip(ip):
 
 
 def export_log(command, destination):
-    # os.system(command + ' > ' + destination)
-    cmd = shlex.split(command + destination)
+    os.system(command + ' > ' + destination)
+    # bash_cmd(command + ' > ' + destination)
+    # cmd_line = f'{command} > {destination}'
+    # cmd = shlex.split(cmd_line)
     # print(f'{cmd}')
-    bash_command(cmd)
+    # bash_command(cmd)
 
 
 # def validate_ip(ip):
@@ -475,8 +480,9 @@ def main():
         create_db_schema()
 
     # Log file for command processing
-    today_log = append_id(args.logfile)
-    ctl_log = os.path.join(EXPORTED_LOGS_DIR, today_log)
+    # today_log = append_id(args.logfile)
+    # ctl_log = os.path.join(EXPORTED_LOGS_DIR, today_log)
+    ctl_log = os.path.join(EXPORTED_LOGS_DIR, args.logfile)
 
     # Checking & creating needed dirs and files
     check_dir(EXPORTED_LOGS_DIR)
@@ -486,7 +492,7 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
-        msg_info(f'Mode: Print DB records. Current environment: {IP2DROP_ENV}')
+        print('Mode: Print DB records')
         print_db_entries()
         exit(0)
 
