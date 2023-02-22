@@ -19,6 +19,7 @@ from sys import platform
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+IP2DROP_ENV = os.environ["IP2DROP_ENV"]
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -481,7 +482,7 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
-        print('Mode: Print DB records')
+        msg_info(f'Mode: Print DB records. Current environment: {IP2DROP_ENV}')
         print_db_entries()
         exit(0)
 
