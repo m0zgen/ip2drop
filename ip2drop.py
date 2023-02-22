@@ -11,6 +11,7 @@ import ipaddress
 import datetime
 import logging
 import subprocess
+from subprocess import Popen, PIPE
 import sqlite3
 import configparser
 import shlex
@@ -19,11 +20,6 @@ from sys import platform
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-try:
-   IP2DROP_ENV = os.environ["IP2DROP_ENV"]
-except KeyError:
-   print(f'Info: Env variable IP2DROP_ENV not defined')
-   IP2DROP_ENV = "None"
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -484,8 +480,9 @@ def main():
         create_db_schema()
 
     # Log file for command processing
-    today_log = append_id(args.logfile)
-    ctl_log = os.path.join(EXPORTED_LOGS_DIR, today_log)
+    # today_log = append_id(args.logfile)
+    # ctl_log = os.path.join(EXPORTED_LOGS_DIR, today_log)
+    ctl_log = os.path.join(EXPORTED_LOGS_DIR, args.logfile)
 
     # Checking & creating needed dirs and files
     check_dir(EXPORTED_LOGS_DIR)
@@ -495,7 +492,7 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
-        msg_info(f'Mode: Print DB records. Current environment: {IP2DROP_ENV}')
+        print('Mode: Print DB records')
         print_db_entries()
         exit(0)
 
