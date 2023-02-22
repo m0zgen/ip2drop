@@ -35,7 +35,8 @@ CONFIG.read(os.path.join(BASE_DIR, 'config.ini'))
 # Load Options
 IP_TIMEOUT = CONFIG['DEFAULT']['IP_TIMEOUT']
 IP_THRESHOLD = CONFIG['DEFAULT']['IP_THRESHOLD']
-EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+# EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
@@ -111,6 +112,12 @@ def msg_info(msg):
 
 def bash_command(cmd):
     subprocess.Popen(cmd, shell=True, executable='/bin/bash')
+
+
+def bash_cmd(cmd):
+    subprocess.Popen(['/bin/bash', '-c', cmd])
+    # print(f'CMD: {cmd}')
+
 
 
 def check_dir(dest):
@@ -346,10 +353,12 @@ def delete_ip(ip):
 
 
 def export_log(command, destination):
-    # os.system(command + ' > ' + destination)
-    cmd = shlex.split(command + destination)
+    os.system(command + ' > ' + destination)
+    # bash_cmd(command + ' > ' + destination)
+    # cmd_line = f'{command} > {destination}'
+    # cmd = shlex.split(cmd_line)
     # print(f'{cmd}')
-    bash_command(cmd)
+    # bash_command(cmd)
 
 
 # def validate_ip(ip):
