@@ -486,9 +486,13 @@ def main():
     # print(type(IPSET_NAME))
     if IPSET_ENABLED:
         set_script = os.path.join(HELPERS_DIR, "set-ipset.sh")
-        subprocess.run([set_script, IPSET_NAME])
+        # subprocess.run([set_script, IPSET_NAME])
         # cmd = shlex.split(cmd_line)
         # bash_command(cmd)
+        res = subprocess.call([set_script, IPSET_NAME])
+        if res:
+            msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
+            exit(1)
 
     # Create db if not exists
     if not os.path.exists(DB_DIR):

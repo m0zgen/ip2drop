@@ -21,25 +21,35 @@ if [[ -z "$1" ]]; then
 fi
 
 if ! [ -x "$(command -v iptables)" ]; then
-  echo 'Error: iptables is not installed.' >&2
-  exit 1
+    echo 'Error: iptables is not installed.' >&2
+    exit 1
 fi
 
 if ! [ -x "$(command -v firewall-cmd)" ]; then
-  echo 'Error: firewall-cmd is not installed.' >&2
-  exit 1
+    echo 'Error: firewall-cmd is not installed.' >&2
+    exit 1
 fi
 # 
 
+# Once operation
 setup_firewalld() {
     if [ ! -e $IPSET_STATUS ]
     then
         firewall-cmd --permanent --new-ipset=${IPSET_NAME} --type=hash:ip --option=timeout=60
         firewall-cmd --permanent --add-source=ipset:${IPSET_NAME} --zone=drop
         firewall-cmd --reload
-        touch $IPSET_STATUS
+
+        local ipset_exists=`ipset -L`
+
+        if echo "$ipset_exists" | grep -iq "${IPSET_NAME}" ;
+        then
+            touch $IPSET_STATUS
+            exit 0
+        else
+            exit 1
+        fi
+        
     fi
-    
 }
 
 # Setup ipset
@@ -52,7 +62,8 @@ then
     if [[ ! -f ../.prod ]]; then
         echo "Info: ${IPSET_NAME} ipset - Ok."
     fi
-
+    exit 0
 else
     iptables -v -I INPUT -m set --match-set "${IPSET_NAME}" src -j DROP >/dev/null 2>&1
+    exit 0
 fi
