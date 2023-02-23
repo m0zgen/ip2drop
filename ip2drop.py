@@ -33,8 +33,8 @@ CONFIG = configparser.ConfigParser()
 CONFIG.read(os.path.join(BASE_DIR, 'config.ini'))
 
 # Load Options
-IP_TIMEOUT = CONFIG['DEFAULT']['IP_TIMEOUT']
-IP_THRESHOLD = CONFIG['DEFAULT']['IP_THRESHOLD']
+IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
+IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 # EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
 EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
