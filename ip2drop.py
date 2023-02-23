@@ -47,8 +47,8 @@ RELATIVE_HELPERS_DIR = "helpers/"
 # Load Options
 IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
 IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
-# EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
-EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
+EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+# EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 
