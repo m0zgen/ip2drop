@@ -8,6 +8,8 @@ logs
 db
 
 # Files
+.prod
+config-prod.ini
 helpers/ipset_status_done
 
 # DB

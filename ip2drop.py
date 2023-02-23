@@ -20,6 +20,22 @@ from sys import platform
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ENV = os.getenv("IP2DROP_ENV")
+# print(f'ENV: {APP_ENV}')
+STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
+DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
+PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
+# Load CONFIG
+CONFIG = configparser.ConfigParser()
+
+if not os.path.exists(STAT_CONFIG):
+    CONFIG.read(DEFAULT_CONFIG)
+else:
+    if os.path.exists(PROD_CONFIG):
+        CONFIG.read(PROD_CONFIG)
+    else:
+        print(f'Config-prod does not found, using default config: {DEFAULT_CONFIG}')
+        CONFIG.read(DEFAULT_CONFIG)
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -28,10 +44,6 @@ RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
 RELATIVE_HELPERS_DIR = "helpers/"
 
-# Load CONFIG
-CONFIG = configparser.ConfigParser()
-CONFIG.read(os.path.join(BASE_DIR, 'config.ini'))
-
 # Load Options
 IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
 IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
@@ -39,6 +51,7 @@ IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
+
 IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
 
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
@@ -307,6 +320,16 @@ def remove_ip_from_firewall(ip):
     log_warn(f'{ip} removed from firewalld.')
 
 
+def add_ip_to_ipset(ip, timeout):
+    timeout = str(timeout)
+    cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
+    os.system(cmd)
+    
+
+def remove_ip_from_ipset(ip):
+    cmd = "ipset del " + IPSET_NAME + " " + ip
+    os.system(cmd)
+
 # Log parsing
 def get_ip(line):
     ip = line.split(" ")[9]
@@ -345,7 +368,12 @@ def delete_ip(ip):
     if ip_exist(ip):
         print(f'IP: {ip} will be deleted')
         delete_dropped_ip(ip)
-        remove_ip_from_firewall(ip)
+    
+        if IPSET_ENABLED:
+            remove_ip_from_ipset(ip)
+        else:
+            remove_ip_from_firewall(ip)
+    
         log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
     else:
         print(f'IP: {ip} not exist in DB')
@@ -406,8 +434,12 @@ def get_log(log, threshold, excludes, showstat):
                     current_date = get_current_time()
                     # Drop end
                     undrop_date = current_date + datetime.timedelta(seconds=IP_TIMEOUT)
+                    
                     # Ban
-                    add_ip_to_firewalld(ip)
+                    if IPSET_ENABLED:
+                        add_ip_to_ipset(ip, IP_TIMEOUT)
+                    else:
+                        add_ip_to_firewalld(ip)
 
                     # IN DEVELOP:
                     if ip_exist(ip):
@@ -428,6 +460,7 @@ def get_log(log, threshold, excludes, showstat):
                         print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
                         log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
 
+                        # Update in DB
                         update_drop_status(2, ip)
 
                     else:
@@ -470,9 +503,16 @@ def main():
 
     # Dirty step
     # TODO: Need to make more beauty)
+    # print(type(IPSET_NAME))
     if IPSET_ENABLED:
-        subprocess.run([HELPERS_DIR + "set-ipset.sh",
-                IPSET_NAME])
+        set_script = os.path.join(HELPERS_DIR, "set-ipset.sh")
+        # subprocess.run([set_script, IPSET_NAME])
+        # cmd = shlex.split(cmd_line)
+        # bash_command(cmd)
+        res = subprocess.call([set_script, IPSET_NAME])
+        if res:
+            msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
+            exit(1)
 
     # Create db if not exists
     if not os.path.exists(DB_DIR):
