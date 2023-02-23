@@ -320,6 +320,16 @@ def remove_ip_from_firewall(ip):
     log_warn(f'{ip} removed from firewalld.')
 
 
+def add_ip_to_ipset(ip, timeout):
+    timeout = str(timeout)
+    cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
+    os.system(cmd)
+    
+
+def remove_ip_from_ipset(ip):
+    cmd = "ipset del " + IPSET_NAME + " " + ip
+    os.system(cmd)
+
 # Log parsing
 def get_ip(line):
     ip = line.split(" ")[9]
@@ -358,7 +368,12 @@ def delete_ip(ip):
     if ip_exist(ip):
         print(f'IP: {ip} will be deleted')
         delete_dropped_ip(ip)
-        remove_ip_from_firewall(ip)
+    
+        if IPSET_ENABLED:
+            remove_ip_from_ipset(ip)
+        else:
+            remove_ip_from_firewall(ip)
+    
         log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
     else:
         print(f'IP: {ip} not exist in DB')
@@ -419,8 +434,12 @@ def get_log(log, threshold, excludes, showstat):
                     current_date = get_current_time()
                     # Drop end
                     undrop_date = current_date + datetime.timedelta(seconds=IP_TIMEOUT)
+                    
                     # Ban
-                    add_ip_to_firewalld(ip)
+                    if IPSET_ENABLED:
+                        add_ip_to_ipset(ip, IP_TIMEOUT)
+                    else:
+                        add_ip_to_firewalld(ip)
 
                     # IN DEVELOP:
                     if ip_exist(ip):
@@ -441,6 +460,7 @@ def get_log(log, threshold, excludes, showstat):
                         print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
                         log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
 
+                        # Update in DB
                         update_drop_status(2, ip)
 
                     else:
