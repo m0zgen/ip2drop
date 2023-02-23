@@ -46,7 +46,21 @@ setup_firewalld() {
 setup_firewalld
 
 STATUS=`iptables -L INPUT -n -v --line-numbers`
-if ! echo "$STATUS" | grep -q "${IPSET_NAME}"; then
-    echo "Adding banlist to iptables..."
-    iptables -v -I INPUT -m set --match-set ${IPSET_NAME} src -j DROP
+# echo "Status: $STATUS"
+# if ! echo "$STATUS" | grep $IPSET_NAME; then
+#     echo "Adding banlist to iptables..."
+#     iptables -v -I INPUT -m set --match-set "${IPSET_NAME}" src -j DROP
+#     # iptables -v -I INPUT -m set --match-set "ip2drop" src -j DROP
+# fi
+
+# echo -e "AA echo $STATUS | grep -iv ${IPSET_NAME} /n ------ "
+
+if echo "$STATUS" | grep -iq "${IPSET_NAME}" ;
+then
+    if [[ ! -f ../.prod ]]; then
+        echo "Info: ${IPSET_NAME} ipset - Ok."
+    fi
+
+else
+    iptables -v -I INPUT -m set --match-set "${IPSET_NAME}" src -j DROP >/dev/null 2>&1
 fi

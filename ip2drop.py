@@ -51,6 +51,7 @@ IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
+
 IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
 
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
@@ -482,9 +483,12 @@ def main():
 
     # Dirty step
     # TODO: Need to make more beauty)
+    # print(type(IPSET_NAME))
     if IPSET_ENABLED:
-        subprocess.run([HELPERS_DIR + "set-ipset.sh",
-                IPSET_NAME])
+        set_script = os.path.join(HELPERS_DIR, "set-ipset.sh")
+        subprocess.run([set_script, IPSET_NAME])
+        # cmd = shlex.split(cmd_line)
+        # bash_command(cmd)
 
     # Create db if not exists
     if not os.path.exists(DB_DIR):
