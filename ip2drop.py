@@ -20,6 +20,22 @@ from sys import platform
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_ENV = os.getenv("IP2DROP_ENV")
+# print(f'ENV: {APP_ENV}')
+STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
+DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
+PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
+# Load CONFIG
+CONFIG = configparser.ConfigParser()
+
+if not os.path.exists(STAT_CONFIG):
+    CONFIG.read(DEFAULT_CONFIG)
+else:
+    if os.path.exists(PROD_CONFIG):
+        CONFIG.read(PROD_CONFIG)
+    else:
+        print(f'Config-prod does not found, using default config: {DEFAULT_CONFIG}')
+        CONFIG.read(DEFAULT_CONFIG)
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -27,10 +43,6 @@ RELATIVE_DB_DIR = "db/"
 RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
 RELATIVE_HELPERS_DIR = "helpers/"
-
-# Load CONFIG
-CONFIG = configparser.ConfigParser()
-CONFIG.read(os.path.join(BASE_DIR, 'config.ini'))
 
 # Load Options
 IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
