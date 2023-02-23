@@ -11,7 +11,6 @@ import ipaddress
 import datetime
 import logging
 import subprocess
-from subprocess import Popen, PIPE
 import sqlite3
 import configparser
 import shlex
@@ -30,12 +29,21 @@ CONFIG = configparser.ConfigParser()
 
 if not os.path.exists(STAT_CONFIG):
     CONFIG.read(DEFAULT_CONFIG)
+    LOADED_CONFIG = DEFAULT_CONFIG
+    SERVER_MODE = 'Standard'
 else:
     if os.path.exists(PROD_CONFIG):
         CONFIG.read(PROD_CONFIG)
+        LOADED_CONFIG = PROD_CONFIG
+        SERVER_MODE = 'Production'
+
     else:
         print(f'Config-prod does not found, using default config: {DEFAULT_CONFIG}')
         CONFIG.read(DEFAULT_CONFIG)
+        LOADED_CONFIG = DEFAULT_CONFIG
+        SERVER_MODE = 'Standard'
+
+
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -304,6 +312,7 @@ def ip_exist(ip):
 def print_db_entries():
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
+    msg_info(f'Mode: Print DB records.')
     for row in cur.execute('SELECT * FROM ip2drop;'):
         print(row)
     conn.close()
@@ -532,8 +541,9 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
-        print('Mode: Print DB records')
         print_db_entries()
+        msg_info(f'Loaded config: {LOADED_CONFIG}\n'
+                 f'Server mode: {SERVER_MODE}')
         exit(0)
 
     if args.delete is not None:
