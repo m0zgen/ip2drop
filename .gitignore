@@ -11,6 +11,7 @@ db
 .prod
 config-prod.ini
 helpers/ipset_status_done
+helpers/packages_status_done
 
 # DB
 db.sql

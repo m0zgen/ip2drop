@@ -3,9 +3,9 @@
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 
 # Imports
-
 import os
 import re
+import sys
 import argparse
 import ipaddress
 import datetime
@@ -14,8 +14,12 @@ import subprocess
 import sqlite3
 import configparser
 import shlex
+import bisect
 from collections import Counter
 from sys import platform
+
+# TODO: mem / cpu thresholding
+# modules=['psutil','numpy'] 
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
