@@ -18,9 +18,8 @@ import bisect
 from collections import Counter
 from sys import platform
 
-# Optional
 # TODO: mem / cpu thresholding
-# import psutil
+# modules=['psutil','numpy'] 
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
