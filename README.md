@@ -83,3 +83,11 @@ Delete IP from DB:
 * `ipset`
 * `python3-pip`
 * `python3-psutil`
+* `firewalld`
+
+Installation:
+```shell
+apt -y install python3 python3-pip python3-psutil ipset
+```
+
+or just run `check-modules.sh` from `helpers` catalog.
