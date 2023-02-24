@@ -59,7 +59,7 @@ packages=(
 check_packages() {
 
     if [ ! -e $PACKAGES_STATUS ]; then
-        
+
         for package in "${packages[@]}"; do
 
             if ! [ -x "$(command -v "${package}")" ]; then
@@ -72,7 +72,6 @@ check_packages() {
 
         touch $PACKAGES_STATUS
     fi
-
 
 }
 
