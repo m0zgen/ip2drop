@@ -76,3 +76,10 @@ Delete IP from DB:
 30-01-2023 19-43-59,316 root INFO Command: journalctl -u ssh -S today --no-tail | grep 'Failed password' Log: /opt/ip2drop/logs/ip2drop.log Threshold 150 Stat: False
 30-01-2023 19-43-59,331 root INFO Processing log: /opt/ip2drop/logs/ip2drop.log
 ```
+
+# Option Requirements
+
+* `python3`
+* `ipset`
+* `python3-pip`
+* `python3-psutil`
