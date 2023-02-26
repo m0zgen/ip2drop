@@ -47,8 +47,6 @@ else:
         LOADED_CONFIG = DEFAULT_CONFIG
         SERVER_MODE = 'Standard'
 
-
-
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
 RELATIVE_DB_DIR = "db/"
@@ -86,6 +84,8 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 # Datetime Format for Journalctl exported logs
 DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 TODAY = datetime.date.today()
+
+IP_NONE = "None"
 
 # Detect system/platform
 if platform == "linux" or platform == "linux2":
@@ -142,7 +142,6 @@ def bash_command(cmd):
 def bash_cmd(cmd):
     subprocess.Popen(['/bin/bash', '-c', cmd])
     # print(f'CMD: {cmd}')
-
 
 
 def check_dir(dest):
@@ -337,16 +336,18 @@ def add_ip_to_ipset(ip, timeout):
     timeout = str(timeout)
     cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
     os.system(cmd)
-    
+
 
 def remove_ip_from_ipset(ip):
     cmd = "ipset del " + IPSET_NAME + " " + ip
     os.system(cmd)
 
+
 # Log parsing
 def get_ip(line):
     ip = line.split(" ")[9]
     return ip
+
 
 # Extract IPv4 only
 def extract_ip(line):
@@ -356,7 +357,7 @@ def extract_ip(line):
     except:
         # msg_info(f'LINE: {line}')
         # IPv6 or not determine data in line
-        ip = "None"
+        ip = IP_NONE
     return ip
 
 
@@ -386,12 +387,12 @@ def delete_ip(ip):
     if ip_exist(ip):
         print(f'IP: {ip} will be deleted')
         delete_dropped_ip(ip)
-    
+
         if IPSET_ENABLED:
             remove_ip_from_ipset(ip)
         else:
             remove_ip_from_firewall(ip)
-    
+
         log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
     else:
         print(f'IP: {ip} not exist in DB')
@@ -432,7 +433,7 @@ def get_log(log, threshold, excludes, showstat):
                 found_count = increment(found_count)
 
             # Checking threshold
-            elif count >= threshold:
+            elif count >= threshold and ip != IP_NONE:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
@@ -452,7 +453,7 @@ def get_log(log, threshold, excludes, showstat):
                     current_date = get_current_time()
                     # Drop end
                     undrop_date = current_date + datetime.timedelta(seconds=IP_TIMEOUT)
-                    
+
                     # Ban
                     if IPSET_ENABLED:
                         add_ip_to_ipset(ip, IP_TIMEOUT)
