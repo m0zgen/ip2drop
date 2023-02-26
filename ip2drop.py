@@ -3,9 +3,9 @@
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 
 # Imports
-
 import os
 import re
+import sys
 import argparse
 import ipaddress
 import datetime
@@ -14,8 +14,12 @@ import subprocess
 import sqlite3
 import configparser
 import shlex
+import bisect
 from collections import Counter
 from sys import platform
+
+# TODO: mem / cpu thresholding
+# modules=['psutil','numpy'] 
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -344,10 +348,15 @@ def get_ip(line):
     ip = line.split(" ")[9]
     return ip
 
-
+# Extract IPv4 only
 def extract_ip(line):
     pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
-    ip = pattern.search(line)[0]
+    try:
+        ip = pattern.search(line)[0]
+    except:
+        # msg_info(f'LINE: {line}')
+        # IPv6 or not determine data in line
+        ip = "None"
     return ip
 
 
