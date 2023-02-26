@@ -87,6 +87,8 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 TODAY = datetime.date.today()
 
+IP_NONE = "None"
+
 # Detect system/platform
 if platform == "linux" or platform == "linux2":
     SYSTEM_LOG = '/var/log/ip2drop.log'
@@ -356,7 +358,7 @@ def extract_ip(line):
     except:
         # msg_info(f'LINE: {line}')
         # IPv6 or not determine data in line
-        ip = "None"
+        ip = IP_NONE
     return ip
 
 
@@ -432,7 +434,7 @@ def get_log(log, threshold, excludes, showstat):
                 found_count = increment(found_count)
 
             # Checking threshold
-            elif count >= threshold:
+            elif count >= threshold and ip != IP_NONE:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
