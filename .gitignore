@@ -6,7 +6,6 @@
 # DIRs
 logs
 db
-conf.d
 
 # Files
 .prod
