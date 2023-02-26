@@ -59,6 +59,10 @@ IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
 IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
 # EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
+# Default log file name
+# TODO: Rename CTL_LOG_FILE to EXPORT_LOG_NAME
+CTL_LOG_FILE = "ip2drop.log"
+
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 
@@ -72,9 +76,6 @@ SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
 CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
 HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
-
-# Default log file name
-CTL_LOG_FILE = "ip2drop.log"
 
 # Database Schema
 DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
