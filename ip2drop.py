@@ -100,17 +100,14 @@ elif platform == "win32":
 
 # Conf.d loader
 D_CONFIG_FILES = []
+D_CONFIG_COUNT = 0
 for path in os.listdir(CONF_DIR):
     # check if current path is a file
     if os.path.isfile(os.path.join(CONF_DIR, path)):
         config_path = os.path.join(CONF_DIR, path)
         D_CONFIG_FILES.append(config_path)
+        D_CONFIG_COUNT += 1
 # print(D_CONFIG_FILES)
-
-for D_CONFIG in D_CONFIG_FILES:
-    CONFIG.read(D_CONFIG)
-    D_EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
-    print(D_EXPORT_COMMAND)
 
 # Logger
 # TODO: Add -v, --verbose as DEBUG mode
@@ -588,7 +585,22 @@ def main():
     # Execute command with export results to log
     export_log(args.command, ctl_log)
     # Exported log processing
+    # TODO: add to get_log timeout arg
     get_log(ctl_log, args.threshold, args.excludes, args.stat)
+
+    # Each configs
+    if D_CONFIG_COUNT > 0:
+        for D_CONFIG in D_CONFIG_FILES:
+            CONFIG.read(D_CONFIG)
+            d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
+            d_ip_treshold = CONFIG['DEFAULT']['IP_THRESHOLD']
+            d_ip_timeout = CONFIG['DEFAULT']['IP_TIMEOUT']
+            d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
+            check_file(d_export_log)
+            export_log(d_export_cmd, d_export_log)
+            get_log(d_export_log, d_ip_treshold, args.excludes, args.stat)
+
+
 
 
 # Init starter
