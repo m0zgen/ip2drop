@@ -30,6 +30,7 @@ DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
 # Load CONFIG
 CONFIG = configparser.ConfigParser()
+# CONF_D_PARSER = configparser.ConfigParser()
 
 if not os.path.exists(STAT_CONFIG):
     CONFIG.read(DEFAULT_CONFIG)
@@ -59,6 +60,10 @@ IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
 IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
 # EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
+# Default log file name
+# TODO: Rename EXPORT_LOG to EXPORT_LOG_NAME
+EXPORT_LOG = CONFIG['DEFAULT']['EXPORT_LOG']
+
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 
@@ -72,9 +77,6 @@ SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
 CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
 HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
-
-# Default log file name
-CTL_LOG_FILE = "ip2drop.log"
 
 # Database Schema
 DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
@@ -502,7 +504,7 @@ def get_log(log, threshold, excludes, showstat):
 def arg_parse():
     parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
-    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=CTL_LOG_FILE)
+    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=IP_THRESHOLD)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
