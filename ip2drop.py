@@ -16,6 +16,7 @@ import configparser
 import shlex
 import bisect
 from collections import Counter
+from collections import OrderedDict
 from sys import platform
 
 # TODO: mem / cpu thresholding
@@ -68,7 +69,6 @@ IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 
 IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
-
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Set Working Paths
@@ -97,6 +97,20 @@ elif platform == "darwin":
 elif platform == "win32":
     print('Platform not supported. Exit. Bye.')
     exit(1)
+
+# Conf.d loader
+D_CONFIG_FILES = []
+for path in os.listdir(CONF_DIR):
+    # check if current path is a file
+    if os.path.isfile(os.path.join(CONF_DIR, path)):
+        config_path = os.path.join(CONF_DIR, path)
+        D_CONFIG_FILES.append(config_path)
+# print(D_CONFIG_FILES)
+
+for D_CONFIG in D_CONFIG_FILES:
+    CONFIG.read(D_CONFIG)
+    D_EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
+    print(D_EXPORT_COMMAND)
 
 # Logger
 # TODO: Add -v, --verbose as DEBUG mode
