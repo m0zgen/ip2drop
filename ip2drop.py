@@ -30,6 +30,7 @@ DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
 # Load CONFIG
 CONFIG = configparser.ConfigParser()
+# CONF_D_PARSER = configparser.ConfigParser()
 
 if not os.path.exists(STAT_CONFIG):
     CONFIG.read(DEFAULT_CONFIG)
@@ -60,8 +61,8 @@ IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
 # EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
 # Default log file name
-# TODO: Rename CTL_LOG_FILE to EXPORT_LOG_NAME
-CTL_LOG_FILE = "ip2drop.log"
+# TODO: Rename EXPORT_LOG to EXPORT_LOG_NAME
+EXPORT_LOG = CONFIG['DEFAULT']['EXPORT_LOG']
 
 IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
@@ -503,7 +504,7 @@ def get_log(log, threshold, excludes, showstat):
 def arg_parse():
     parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
-    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=CTL_LOG_FILE)
+    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=IP_THRESHOLD)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
