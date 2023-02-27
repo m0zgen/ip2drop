@@ -428,7 +428,7 @@ def export_log(command, destination):
 #     # TODO: need to add validation logic
 
 # General
-def get_log(log, threshold, excludes, showstat):
+def get_log(log, threshold, timeout, excludes, showstat):
     msg_info(f'Info: Processing log: {log}')
     found_count = 0
 
@@ -465,11 +465,11 @@ def get_log(log, threshold, excludes, showstat):
                     # Drop time
                     current_date = get_current_time()
                     # Drop end
-                    undrop_date = current_date + datetime.timedelta(seconds=IP_TIMEOUT)
+                    undrop_date = current_date + datetime.timedelta(seconds=timeout)
 
                     # Ban
                     if IPSET_ENABLED:
-                        add_ip_to_ipset(ip, IP_TIMEOUT)
+                        add_ip_to_ipset(ip, timeout)
                     else:
                         add_ip_to_firewalld(ip)
 
@@ -516,7 +516,8 @@ def arg_parse():
     parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
-    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=IP_THRESHOLD)
+    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
+    parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
                         default=IP_EXCLUDES)
@@ -586,7 +587,7 @@ def main():
     export_log(args.command, ctl_log)
     # Exported log processing
     # TODO: add to get_log timeout arg
-    get_log(ctl_log, args.threshold, args.excludes, args.stat)
+    get_log(ctl_log, args.threshold, args.timeout, args.excludes, args.stat)
 
     # Each configs
     if D_CONFIG_COUNT > 0:
@@ -600,7 +601,7 @@ def main():
                 d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, args.excludes, args.stat)
+                get_log(d_export_log, d_ip_treshold, d_ip_timeout, args.excludes, args.stat)
 
 # Init starter
 if __name__ == "__main__":
