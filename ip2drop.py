@@ -593,8 +593,8 @@ def main():
         for D_CONFIG in D_CONFIG_FILES:
             CONFIG.read(D_CONFIG)
             d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
-            d_ip_treshold = CONFIG['DEFAULT']['IP_THRESHOLD']
-            d_ip_timeout = CONFIG['DEFAULT']['IP_TIMEOUT']
+            d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
+            d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
             d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
             check_file(d_export_log)
             export_log(d_export_cmd, d_export_log)
