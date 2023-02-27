@@ -64,11 +64,12 @@ EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
 # Default log file name
 # TODO: Rename EXPORT_LOG to EXPORT_LOG_NAME
 EXPORT_LOG = CONFIG['DEFAULT']['EXPORT_LOG']
+GROUP_NAME = CONFIG['DEFAULT']['GROUP_NAME']
 
-IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
-IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
+IP_EXCLUDES = CONFIG['MAIN']['IP_EXCLUDES']
+IPSET_NAME = CONFIG['MAIN']['IPSET_NAME']
 
-IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
+IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Set Working Paths
@@ -428,7 +429,7 @@ def export_log(command, destination):
 #     # TODO: need to add validation logic
 
 # General
-def get_log(log, threshold, timeout, excludes, showstat):
+def get_log(log, threshold, timeout, group_name, excludes, showstat):
     msg_info(f'Info: Processing log: {log}')
     found_count = 0
 
@@ -497,7 +498,7 @@ def get_log(log, threshold, timeout, excludes, showstat):
 
                     else:
                         # Add to DB
-                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, current_date, 'testing')
+                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, current_date, group_name)
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
@@ -518,6 +519,7 @@ def arg_parse():
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
     parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
     parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
+    parser.add_argument('-g', '--group', dest='group', type=str, help='Grouping rule name', default=GROUP_NAME)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
                         default=IP_EXCLUDES)
@@ -587,7 +589,7 @@ def main():
     export_log(args.command, ctl_log)
     # Exported log processing
     # TODO: add to get_log timeout arg
-    get_log(ctl_log, args.threshold, args.timeout, args.excludes, args.stat)
+    get_log(ctl_log, args.threshold, args.timeout, args.group, args.excludes, args.stat)
 
     # Each configs
     if D_CONFIG_COUNT > 0:
@@ -599,9 +601,10 @@ def main():
                 d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
                 d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
                 d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
+                d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, d_ip_timeout, args.excludes, args.stat)
+                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
 
 # Init starter
 if __name__ == "__main__":
