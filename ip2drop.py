@@ -16,6 +16,7 @@ import configparser
 import shlex
 import bisect
 from collections import Counter
+from collections import OrderedDict
 from sys import platform
 
 # TODO: mem / cpu thresholding
@@ -68,7 +69,6 @@ IP_EXCLUDES = CONFIG['DEFAULT']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['DEFAULT']['IPSET_NAME']
 
 IPSET_ENABLED = CONFIG['DEFAULT'].getboolean('IPSET_ENABLED')
-
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Set Working Paths
@@ -97,6 +97,17 @@ elif platform == "darwin":
 elif platform == "win32":
     print('Platform not supported. Exit. Bye.')
     exit(1)
+
+# Conf.d loader
+D_CONFIG_FILES = []
+D_CONFIG_COUNT = 0
+for path in os.listdir(CONF_DIR):
+    # check if current path is a file
+    if os.path.isfile(os.path.join(CONF_DIR, path)):
+        config_path = os.path.join(CONF_DIR, path)
+        D_CONFIG_FILES.append(config_path)
+        D_CONFIG_COUNT += 1
+# print(D_CONFIG_FILES)
 
 # Logger
 # TODO: Add -v, --verbose as DEBUG mode
@@ -417,7 +428,7 @@ def export_log(command, destination):
 #     # TODO: need to add validation logic
 
 # General
-def get_log(log, threshold, excludes, showstat):
+def get_log(log, threshold, timeout, excludes, showstat):
     msg_info(f'Info: Processing log: {log}')
     found_count = 0
 
@@ -454,11 +465,11 @@ def get_log(log, threshold, excludes, showstat):
                     # Drop time
                     current_date = get_current_time()
                     # Drop end
-                    undrop_date = current_date + datetime.timedelta(seconds=IP_TIMEOUT)
+                    undrop_date = current_date + datetime.timedelta(seconds=timeout)
 
                     # Ban
                     if IPSET_ENABLED:
-                        add_ip_to_ipset(ip, IP_TIMEOUT)
+                        add_ip_to_ipset(ip, timeout)
                     else:
                         add_ip_to_firewalld(ip)
 
@@ -505,7 +516,8 @@ def arg_parse():
     parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
     parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
-    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Ban time', default=IP_THRESHOLD)
+    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
+    parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
                         default=IP_EXCLUDES)
@@ -574,8 +586,22 @@ def main():
     # Execute command with export results to log
     export_log(args.command, ctl_log)
     # Exported log processing
-    get_log(ctl_log, args.threshold, args.excludes, args.stat)
+    # TODO: add to get_log timeout arg
+    get_log(ctl_log, args.threshold, args.timeout, args.excludes, args.stat)
 
+    # Each configs
+    if D_CONFIG_COUNT > 0:
+        for D_CONFIG in D_CONFIG_FILES:
+            CONFIG.read(D_CONFIG)
+            d_enabled = CONFIG['DEFAULT'].getboolean('ENABLED')
+            if d_enabled:
+                d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
+                d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
+                d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
+                d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
+                check_file(d_export_log)
+                export_log(d_export_cmd, d_export_log)
+                get_log(d_export_log, d_ip_treshold, d_ip_timeout, args.excludes, args.stat)
 
 # Init starter
 if __name__ == "__main__":
