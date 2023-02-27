@@ -592,16 +592,15 @@ def main():
     if D_CONFIG_COUNT > 0:
         for D_CONFIG in D_CONFIG_FILES:
             CONFIG.read(D_CONFIG)
-            d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
-            d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
-            d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
-            d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
-            check_file(d_export_log)
-            export_log(d_export_cmd, d_export_log)
-            get_log(d_export_log, d_ip_treshold, args.excludes, args.stat)
-
-
-
+            d_enabled = CONFIG['DEFAULT'].getboolean('ENABLED')
+            if d_enabled:
+                d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
+                d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
+                d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
+                d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
+                check_file(d_export_log)
+                export_log(d_export_cmd, d_export_log)
+                get_log(d_export_log, d_ip_treshold, args.excludes, args.stat)
 
 # Init starter
 if __name__ == "__main__":
