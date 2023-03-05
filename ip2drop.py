@@ -145,6 +145,24 @@ def msg_info(msg):
     print(msg)
 
 
+# Arguments parser
+def arg_parse():
+    parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
+    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
+    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
+    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
+    parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
+    parser.add_argument('-g', '--group', dest='group', type=str, help='Grouping rule name', default=GROUP_NAME)
+    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
+    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
+                        default=IP_EXCLUDES)
+    parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
+                        default=False)
+    parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
+                        default=False)
+    # args = parser.parse_args()
+    return parser.parse_args()
+
 # Actions
 
 # FS Operations
@@ -225,11 +243,18 @@ def create_db_schema():
             print(f'Checking {DROP_DB} schema: Done.')
 
 
-def add_drop_ip(ip, ip_int, status, count, timeout, date_added, group):
+def check_db(database_path):
+    print(f'DB: {DROP_DB}')
+    is_exist = os.path.exists(database_path)
+    if not is_exist:
+        create_db_schema()
+
+
+def add_drop_ip(ip, ip_int, status, count, timeout, drop_date, date_added, group):
     conn = sqlite3.connect(DROP_DB)
     cursor = conn.cursor()
-    params = (ip, ip_int, status, count, timeout, date_added, group)
-    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?)", params)
+    params = (ip, ip_int, status, count, timeout, drop_date, date_added, group)
+    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?,?)", params)
     conn.commit()
     print('Drop Entry Created Successful')
     conn.close()
@@ -458,15 +483,10 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 if showstat:
                     print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
                     log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
-                    found_count = increment(found_count)
 
                 else:
                     # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-                    # Drop time
-                    current_date = get_current_time()
-                    # Drop end
-                    undrop_date = current_date + datetime.timedelta(seconds=timeout)
 
                     # Ban
                     if IPSET_ENABLED:
@@ -481,8 +501,8 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         current_count = get_drop_count(ip)
 
                         # Format: 2023-02-11 18:27:50.192957
-                        time_difference = current_date - datetime.datetime.strptime(current_timeout,
-                                                                                    DATETIME_DEFAULT_FORMAT)
+                        time_difference = creation_date - datetime.datetime.strptime(current_timeout,
+                                                                                     DATETIME_DEFAULT_FORMAT)
                         total_seconds = time_difference.total_seconds()
                         # print(f'Timeout: {time_difference}')
                         # print(f'Total seconds: {total_seconds}')
@@ -497,39 +517,24 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         update_drop_status(2, ip)
 
                     else:
+                        # Drop time
+                        creation_date = get_current_time()
+                        drop_date = creation_date
+                        # Un Drop end
+                        undrop_date = creation_date + datetime.timedelta(seconds=timeout)
+
                         # Add to DB
-                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, current_date, group_name)
+                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, group_name)
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
-                    found_count = increment(found_count)
+                    # found_count = increment(found_count)
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
     if found_count == 0:
-        log_info(f'Info: Thread does not found.')
-        print(f'Info: Thread does not found.')
+        msg_info(f'Info: Thread does not found.')
 
     # print(f'Found count: {found_count}')
-
-
-# Arguments parser
-def arg_parse():
-    parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
-    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
-    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
-    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
-    parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
-    parser.add_argument('-g', '--group', dest='group', type=str, help='Grouping rule name', default=GROUP_NAME)
-    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
-    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
-                        default=IP_EXCLUDES)
-    parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
-                        default=False)
-    parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
-                        default=False)
-
-    # args = parser.parse_args()
-    return parser.parse_args()
 
 
 # Main
@@ -567,6 +572,7 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
+        check_db(DROP_DB)
         print_db_entries()
         msg_info(f'Loaded config: {LOADED_CONFIG}\n'
                  f'Server mode: {SERVER_MODE}')
