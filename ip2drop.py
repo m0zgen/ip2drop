@@ -13,48 +13,21 @@ import logging
 import subprocess
 import sqlite3
 import configparser
-import shlex
-import bisect
 from collections import Counter
-from collections import OrderedDict
 from sys import platform
+from pathlib import Path
+
+# Import app
+sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
+from app import var
+# print(f'Working dir: {var.STAT_CONFIG}')
 
 # TODO: mem / cpu thresholding
 # modules=['psutil','numpy'] 
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_ENV = os.getenv("IP2DROP_ENV")
-# print(f'ENV: {APP_ENV}')
-STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
-DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
-PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
-# Load CONFIG
-CONFIG = configparser.ConfigParser()
-# CONF_D_PARSER = configparser.ConfigParser()
-
-if not os.path.exists(STAT_CONFIG):
-    CONFIG.read(DEFAULT_CONFIG)
-    LOADED_CONFIG = DEFAULT_CONFIG
-    SERVER_MODE = 'Standard'
-else:
-    if os.path.exists(PROD_CONFIG):
-        CONFIG.read(PROD_CONFIG)
-        LOADED_CONFIG = PROD_CONFIG
-        SERVER_MODE = 'Production'
-
-    else:
-        print(f'Config-prod does not found, using default config: {DEFAULT_CONFIG}')
-        CONFIG.read(DEFAULT_CONFIG)
-        LOADED_CONFIG = DEFAULT_CONFIG
-        SERVER_MODE = 'Standard'
-
-# Relative paths
-RELATIVE_SRC_DIR = "src/"
-RELATIVE_DB_DIR = "db/"
-RELATIVE_LOGS_DIR = "logs/"
-RELATIVE_CONF_DIR = "conf.d/"
-RELATIVE_HELPERS_DIR = "helpers/"
+CONFIG = var.CONFIG
 
 # Load Options
 IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
@@ -73,11 +46,11 @@ IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Set Working Paths
-DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
-SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
-CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
-HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
-EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
+DB_DIR = os.path.join(BASE_DIR, var.RELATIVE_DB_DIR)
+SRC_DIR = os.path.join(BASE_DIR, var.RELATIVE_SRC_DIR)
+CONF_DIR = os.path.join(BASE_DIR, var.RELATIVE_CONF_DIR)
+HELPERS_DIR = os.path.join(BASE_DIR, var.RELATIVE_HELPERS_DIR)
+EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, var.RELATIVE_LOGS_DIR)
 
 # Database Schema
 DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
@@ -162,6 +135,7 @@ def arg_parse():
                         default=False)
     # args = parser.parse_args()
     return parser.parse_args()
+
 
 # Actions
 
@@ -575,8 +549,8 @@ def main():
     if args.print:
         check_db(DROP_DB)
         print_db_entries()
-        msg_info(f'Loaded config: {LOADED_CONFIG}\n'
-                 f'Server mode: {SERVER_MODE}')
+        msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
+                 f'Server mode: {var.SERVER_MODE}')
         exit(0)
 
     if args.delete is not None:
@@ -612,6 +586,7 @@ def main():
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
                 get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
+
 
 # Init starter
 if __name__ == "__main__":
