@@ -502,7 +502,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                     else:
                         # Drop time
                         creation_date = get_current_time()
-                        drop_date = creation_date()
+                        drop_date = creation_date
                         # Un Drop end
                         undrop_date = creation_date + datetime.timedelta(seconds=timeout)
 
