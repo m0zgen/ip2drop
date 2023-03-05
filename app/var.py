@@ -78,15 +78,15 @@ elif platform == "win32":
 
 
 def get_config_files():
-    D_CONFIG_FILES = []
-    D_CONFIG_COUNT = 0
+    d_config_files = []
+    d_config_count = 0
     for path in os.listdir(CONF_DIR):
         # check if current path is a file
         if os.path.isfile(os.path.join(CONF_DIR, path)):
             config_path = os.path.join(CONF_DIR, path)
-            D_CONFIG_FILES.append(config_path)
-            D_CONFIG_COUNT += 1
-    return D_CONFIG_FILES, D_CONFIG_COUNT
+            d_config_files.append(config_path)
+            d_config_count += 1
+    return d_config_files, d_config_count
     # print(D_CONFIG_FILES)
 
 
