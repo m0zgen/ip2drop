@@ -225,11 +225,18 @@ def create_db_schema():
             print(f'Checking {DROP_DB} schema: Done.')
 
 
-def add_drop_ip(ip, ip_int, status, count, timeout, date_added, group):
+def check_db(database_path):
+    print(f'DB: {DROP_DB}')
+    is_exist = os.path.exists(database_path)
+    if not is_exist:
+        create_db_schema()
+
+
+def add_drop_ip(ip, ip_int, status, count, timeout, drop_date, date_added, group):
     conn = sqlite3.connect(DROP_DB)
     cursor = conn.cursor()
-    params = (ip, ip_int, status, count, timeout, date_added, group)
-    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?)", params)
+    params = (ip, ip_int, status, count, timeout, drop_date, date_added, group)
+    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?,?)", params)
     conn.commit()
     print('Drop Entry Created Successful')
     conn.close()
@@ -463,10 +470,6 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 else:
                     # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-                    # Drop time
-                    current_date = get_current_time()
-                    # Drop end
-                    undrop_date = current_date + datetime.timedelta(seconds=timeout)
 
                     # Ban
                     if IPSET_ENABLED:
@@ -481,8 +484,8 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         current_count = get_drop_count(ip)
 
                         # Format: 2023-02-11 18:27:50.192957
-                        time_difference = current_date - datetime.datetime.strptime(current_timeout,
-                                                                                    DATETIME_DEFAULT_FORMAT)
+                        time_difference = creation_date - datetime.datetime.strptime(current_timeout,
+                                                                                     DATETIME_DEFAULT_FORMAT)
                         total_seconds = time_difference.total_seconds()
                         # print(f'Timeout: {time_difference}')
                         # print(f'Total seconds: {total_seconds}')
@@ -497,8 +500,14 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         update_drop_status(2, ip)
 
                     else:
+                        # Drop time
+                        creation_date = get_current_time()
+                        drop_date = creation_date()
+                        # Un Drop end
+                        undrop_date = creation_date + datetime.timedelta(seconds=timeout)
+
                         # Add to DB
-                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, current_date, group_name)
+                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, group_name)
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
@@ -567,6 +576,7 @@ def main():
         print('Mode: Show statistics without actions')
 
     if args.print:
+        check_db(DROP_DB)
         print_db_entries()
         msg_info(f'Loaded config: {LOADED_CONFIG}\n'
                  f'Server mode: {SERVER_MODE}')
