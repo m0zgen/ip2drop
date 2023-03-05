@@ -1,4 +1,5 @@
 import os
+import logging
 import configparser
 from sys import platform
 
@@ -74,3 +75,51 @@ elif platform == "darwin":
 elif platform == "win32":
     print('Platform not supported. Exit. Bye.')
     exit(1)
+
+
+def get_config_files():
+    D_CONFIG_FILES = []
+    D_CONFIG_COUNT = 0
+    for path in os.listdir(CONF_DIR):
+        # check if current path is a file
+        if os.path.isfile(os.path.join(CONF_DIR, path)):
+            config_path = os.path.join(CONF_DIR, path)
+            D_CONFIG_FILES.append(config_path)
+            D_CONFIG_COUNT += 1
+    return D_CONFIG_FILES, D_CONFIG_COUNT
+    # print(D_CONFIG_FILES)
+
+
+# Logging
+logging.basicConfig(filename=SYSTEM_LOG,
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%d-%m-%Y %H-%M-%S',
+                    level=logging.DEBUG)
+
+
+# Logger messages
+# TODO: Add -v, --verbose as DEBUG mode
+def log_debug(msg):
+    logging.debug(msg)
+
+
+def log_info(msg):
+    logging.info(msg)
+
+
+def log_warn(msg):
+    logging.warning(msg)
+
+
+def log_err(msg):
+    logging.error(msg)
+
+
+def log_crit(msg):
+    logging.critical(msg)
+
+
+def msg_info(msg):
+    log_info(msg)
+    print(msg)

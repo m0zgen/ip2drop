@@ -9,7 +9,6 @@ import sys
 import argparse
 import ipaddress
 import datetime
-import logging
 import subprocess
 import sqlite3
 from collections import Counter
@@ -54,52 +53,33 @@ DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
-
 # Conf.d loader
-D_CONFIG_FILES = []
-D_CONFIG_COUNT = 0
-for path in os.listdir(CONF_DIR):
-    # check if current path is a file
-    if os.path.isfile(os.path.join(CONF_DIR, path)):
-        config_path = os.path.join(CONF_DIR, path)
-        D_CONFIG_FILES.append(config_path)
-        D_CONFIG_COUNT += 1
+D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 # print(D_CONFIG_FILES)
 
-# Logger
-# TODO: Add -v, --verbose as DEBUG mode
 
-SYSTEM_LOG = var.SYSTEM_LOG
-logging.basicConfig(filename=SYSTEM_LOG,
-                    filemode='a',
-                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-                    datefmt='%d-%m-%Y %H-%M-%S',
-                    level=logging.DEBUG)
-
-
-# Logger messages
 def log_debug(msg):
-    logging.debug(msg)
+    var.log_debug(msg)
 
 
 def log_info(msg):
-    logging.info(msg)
+    var.log_info(msg)
 
 
 def log_warn(msg):
-    logging.warning(msg)
+    var.log_warn(msg)
 
 
 def log_err(msg):
-    logging.error(msg)
+    var.log_err(msg)
 
 
 def log_crit(msg):
-    logging.critical(msg)
+    var.log_crit(msg)
 
 
 def msg_info(msg):
-    log_info(msg)
+    var.log_info(msg)
     print(msg)
 
 
@@ -535,7 +515,7 @@ def main():
         check_db(DROP_DB)
         print_db_entries()
         msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
-                 f'System log: {SYSTEM_LOG}\n'
+                 f'System log: {var.SYSTEM_LOG}\n'
                  f'Server mode: {var.SERVER_MODE}')
         exit(0)
 
