@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
 from app import lib
-from app import log
+from app import log as l
 
 # TODO: mem / cpu thresholding
 # modules=['psutil','numpy'] 
@@ -43,46 +43,15 @@ DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 TODAY = datetime.date.today()
 IP_NONE = "None"
 
-# Set Working Paths
-DB_DIR = var.DB_DIR
-SRC_DIR = var.SRC_DIR
-CONF_DIR = var.CONF_DIR
-HELPERS_DIR = var.HELPERS_DIR
-EXPORTED_LOGS_DIR = var.EXPORTED_LOGS_DIR
-
 # Database Schema
-DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
-DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
+DROP_DB = os.path.join(var.DB_DIR, 'db.sqlite3')
+DROP_DB_SCHEMA = os.path.join(var.SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Conf.d loader
+# Set Working Paths
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 # print(D_CONFIG_FILES)
-
-
-def log_debug(msg):
-    log.log_debug(msg)
-
-
-def log_info(msg):
-    log.log_info(msg)
-
-
-def log_warn(msg):
-    log.log_warn(msg)
-
-
-def log_err(msg):
-    log.log_err(msg)
-
-
-def log_crit(msg):
-    log.log_crit(msg)
-
-
-def msg_info(msg):
-    log.log_info(msg)
-    print(msg)
 
 
 # Arguments parser
@@ -122,14 +91,14 @@ def check_dir(dest):
     if not is_exist:
         # Create a new directory because it does not exist
         os.makedirs(dest)
-        print(f'Log catalog: {dest} created. Done.')
+        l.msg_info(f'Log catalog: {dest} created. Done.')
 
 
 def check_file(file):
     # Create the file if it does not exist
     if not os.path.exists(file):
         open(file, 'w').close()
-        print(f'Log file: {file} created. Done.')
+        l.msg_info(f'Log file: {file} created. Done.')
 
 
 def check_start_end(current_timeout, time_difference, log):
@@ -293,9 +262,9 @@ def ip_exist(ip):
 
 
 def print_db_entries():
+    l.msg_info(f'Mode: Print DB records.')
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
-    msg_info(f'Mode: Print DB records.')
     for row in cur.execute('SELECT * FROM ip2drop;'):
         print(row)
     conn.close()
@@ -304,12 +273,12 @@ def print_db_entries():
 # Firewall Operations
 def add_ip_to_firewalld(ip):
     os.system("firewall-cmd --zone=drop --add-source=" + ip)
-    log_warn(f'{ip} added to firewalld.')
+    l.log_warn(f'{ip} added to firewalld.')
 
 
 def remove_ip_from_firewall(ip):
     os.system("firewall-cmd --zone=drop --remove-source=" + ip)
-    log_warn(f'{ip} removed from firewalld.')
+    l.log_warn(f'{ip} removed from firewalld.')
 
 
 def add_ip_to_ipset(ip, timeout):
@@ -373,10 +342,10 @@ def delete_ip(ip):
         else:
             remove_ip_from_firewall(ip)
 
-        log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
+        l.log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
     else:
         print(f'IP: {ip} not exist in DB')
-        log_info(f'IP: {ip} not exist in DB')
+        l.log_info(f'IP: {ip} not exist in DB')
 
 
 def export_log(command, destination):
@@ -396,7 +365,7 @@ def export_log(command, destination):
 
 # General
 def get_log(log, threshold, timeout, group_name, excludes, showstat):
-    msg_info(f'Info: Processing log: {log}')
+    l.msg_info(f'Info: Processing log: {log}')
     found_count = 0
 
     with open(log, "r") as f:
@@ -409,7 +378,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
             # Checking excludes list
             if ip in exclude_from_check:
-                msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
+                l.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = increment(found_count)
 
             # Checking threshold
@@ -423,7 +392,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
                     print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
-                    log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
+                    l.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
 
                 else:
                     # TODO: Need to remove this section
@@ -452,9 +421,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         # check_start_end(current_count, time_difference, log)
 
                         # TODO: Add and update drop counts
-
-                        print(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
-                        log_info(f'IP exist in Drop DB: {ip} till to: {current_timeout}')
+                        l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
 
                         # Update in DB
                         update_drop_status(2, ip)
@@ -467,14 +434,14 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
                         # Add to DB
                         add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, group_name)
-                        log_info(f'Add drop IP to DB: {ip}')
+                        l.log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
     if found_count == 0:
-        msg_info(f'Info: Thread does not found.')
+        l.msg_info(f'Info: Thread does not found.')
 
     # print(f'Found count: {found_count}')
 
@@ -487,37 +454,37 @@ def main():
     # TODO: Need to make more beauty)
     # print(type(IPSET_NAME))
     if IPSET_ENABLED:
-        set_script = os.path.join(HELPERS_DIR, "set-ipset.sh")
+        set_script = os.path.join(var.HELPERS_DIR, "set-ipset.sh")
         # subprocess.run([set_script, IPSET_NAME])
         # cmd = shlex.split(cmd_line)
         # bash_command(cmd)
         res = subprocess.call([set_script, IPSET_NAME])
         if res:
-            msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
+            l.msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
             exit(1)
 
     # Create db if not exists
-    if not os.path.exists(DB_DIR):
-        check_dir(DB_DIR)
+    if not os.path.exists(var.DB_DIR):
+        check_dir(var.DB_DIR)
         create_db_schema()
 
     # Log file for command processing
     # today_log = append_id(args.logfile)
-    # ctl_log = os.path.join(EXPORTED_LOGS_DIR, today_log)
-    ctl_log = os.path.join(EXPORTED_LOGS_DIR, args.logfile)
+    # ctl_log = os.path.join(var.EXPORTED_LOGS_DIR, today_log)
+    ctl_log = os.path.join(var.EXPORTED_LOGS_DIR, args.logfile)
 
     # Checking & creating needed dirs and files
-    check_dir(EXPORTED_LOGS_DIR)
+    check_dir(var.EXPORTED_LOGS_DIR)
     check_file(ctl_log)
 
     if args.stat:
-        print('Mode: Show statistics without actions')
+        l.msg_info('Mode: Show statistics without actions')
 
     if args.print:
         check_db(DROP_DB)
         print_db_entries()
-        msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
-                 f'System log: {log.SYSTEM_LOG}\n'
+        l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
+                 f'System log: {l.SYSTEM_LOG}\n'
                  f'Server mode: {var.SERVER_MODE}')
         exit(0)
 
@@ -531,8 +498,8 @@ def main():
 
     # print(f'Using command: {args.command}')
     # print(f'Checking threshold: {args.threshold}')
-    log_info(f'ip2drop started with params:')
-    log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
+    l.log_info(f'ip2drop started with params:')
+    l.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
     # Execute command with export results to log
     export_log(args.command, ctl_log)
@@ -549,7 +516,7 @@ def main():
                 d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
                 d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
                 d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
-                d_export_log = os.path.join(EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
+                d_export_log = os.path.join(var.EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)

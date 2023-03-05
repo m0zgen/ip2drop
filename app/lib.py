@@ -1,6 +1,6 @@
 import os
 
-# Generators
+# Generators for vars
 def get_base_dir():
     base = os.path.join(os.getcwd())  # .. means parent directory
 
@@ -15,6 +15,5 @@ def get_current_dir():
 def get_parent_directory():
     # Create a relative path to the parent of the current working directory
     relative_parent = os.path.join(os.getcwd(), "..")  # .. means parent directory
-
     # Return the absolute path of the parent directory
     return os.path.abspath(relative_parent)

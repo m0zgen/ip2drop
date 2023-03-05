@@ -33,6 +33,7 @@ STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
 DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
 
+# Dynamic config loader exporter
 if not os.path.exists(STAT_CONFIG):
     CONFIG.read(DEFAULT_CONFIG)
     LOADED_CONFIG = DEFAULT_CONFIG
@@ -49,7 +50,7 @@ else:
         LOADED_CONFIG = DEFAULT_CONFIG
         SERVER_MODE = 'Standard'
 
-
+# Load and export configs from conf.d
 def get_config_files():
     d_config_files = []
     d_config_count = 0
