@@ -3,6 +3,7 @@
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 
 # Imports
+# ------------------------------------------------------------------------------------------------------/
 import os
 import re
 import sys
@@ -14,15 +15,17 @@ import sqlite3
 from collections import Counter
 from pathlib import Path
 
+# TODO: mem / cpu thresholding
+# modules=['psutil','numpy']
+
 # Import app
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
 from app import log as l
 from app import lib
 
-
-# TODO: mem / cpu thresholding
-# modules=['psutil','numpy'] 
+# Variables
+# ------------------------------------------------------------------------------------------------------/
 
 # Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -51,10 +54,13 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Conf.d loader
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
+
+
 # print(D_CONFIG_FILES)
 
 
 # Arguments parser
+# ------------------------------------------------------------------------------------------------------/
 def arg_parse():
     parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
     parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
@@ -75,19 +81,10 @@ def arg_parse():
     return parser.parse_args()
 
 
-# Actions
+# Services
+# ------------------------------------------------------------------------------------------------------/
 
 # FS Operations
-
-def bash_command(cmd):
-    subprocess.Popen(cmd, shell=True, executable='/bin/bash')
-
-
-def bash_cmd(cmd):
-    subprocess.Popen(['/bin/bash', '-c', cmd])
-    # print(f'CMD: {cmd}')
-
-
 def check_dir(dest):
     is_exist = os.path.exists(dest)
     if not is_exist:
@@ -103,6 +100,13 @@ def check_file(file):
         l.msg_info(f'Log file: {file} created. Done.')
 
 
+def increment(number):
+    number += 1
+    return number
+
+
+# Time operations
+# ------------------------------------------------------------------------------------------------------/
 def check_start_end(current_timeout, time_difference, log):
     # Timing processes
     log_time_format = '%H:%M:%S'
@@ -131,8 +135,16 @@ def check_start_end(current_timeout, time_difference, log):
     # print(f'Timeout {current_timeout}, Count: {current_count}')
 
 
-# DB Operations
+def get_current_date():
+    return datetime.date.today()
 
+
+def get_current_time():
+    return datetime.datetime.now()
+
+
+# DB Operations
+# ------------------------------------------------------------------------------------------------------/
 # TODO: Proccess db operation to def
 # Add db.sql exists testing
 
@@ -273,6 +285,7 @@ def print_db_entries():
 
 
 # Firewall Operations
+# ------------------------------------------------------------------------------------------------------/
 def add_ip_to_firewalld(ip):
     os.system("firewall-cmd --zone=drop --add-source=" + ip)
     l.log_warn(f'{ip} added to firewalld.')
@@ -294,7 +307,24 @@ def remove_ip_from_ipset(ip):
     os.system(cmd)
 
 
+def delete_ip(ip):
+    if ip_exist(ip):
+        print(f'IP: {ip} will be deleted')
+        delete_dropped_ip(ip)
+
+        if IPSET_ENABLED:
+            remove_ip_from_ipset(ip)
+        else:
+            remove_ip_from_firewall(ip)
+
+        l.log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
+    else:
+        print(f'IP: {ip} not exist in DB')
+        l.log_info(f'IP: {ip} not exist in DB')
+
+
 # Log parsing
+# ------------------------------------------------------------------------------------------------------/
 def get_ip(line):
     ip = line.split(" ")[9]
     return ip
@@ -312,44 +342,8 @@ def extract_ip(line):
     return ip
 
 
-# Services
-def increment(number):
-    number += 1
-    return number
-
-
-def get_current_date():
-    return datetime.date.today()
-
-
-def get_current_time():
-    return datetime.datetime.now()
-
-
-# Ref: https://stackoverflow.com/questions/37487758/how-to-add-an-id-to-filename-before-extension
-def append_id(filename):
-    name, ext = os.path.splitext(filename)
-    result = "{name}_{uid}{ext}".format(name=name, uid=TODAY.strftime("%d_%m_%Y"), ext=ext)
-    # msg_info(f'Result: {result}')
-    return result
-
-
-def delete_ip(ip):
-    if ip_exist(ip):
-        print(f'IP: {ip} will be deleted')
-        delete_dropped_ip(ip)
-
-        if IPSET_ENABLED:
-            remove_ip_from_ipset(ip)
-        else:
-            remove_ip_from_firewall(ip)
-
-        l.log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
-    else:
-        print(f'IP: {ip} not exist in DB')
-        l.log_info(f'IP: {ip} not exist in DB')
-
-
+# Log Processing
+# ------------------------------------------------------------------------------------------------------/
 def export_log(command, destination):
     os.system(command + ' > ' + destination)
     # bash_cmd(command + ' > ' + destination)
@@ -449,6 +443,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
 
 # Main
+# ------------------------------------------------------------------------------------------------------/
 def main():
     args = arg_parse()
 
@@ -492,8 +487,6 @@ def main():
                    f'System log: {l.SYSTEM_LOG}\n'
                    f'Server mode: {var.SERVER_MODE}')
         exit(0)
-
-
 
     if args.delete is not None:
         delete_ip(args.delete)
