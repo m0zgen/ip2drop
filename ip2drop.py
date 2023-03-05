@@ -17,8 +17,9 @@ from pathlib import Path
 # Import app
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
-from app import lib
 from app import log as l
+from app import lib
+
 
 # TODO: mem / cpu thresholding
 # modules=['psutil','numpy'] 
@@ -49,7 +50,6 @@ DROP_DB_SCHEMA = os.path.join(var.SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Conf.d loader
-# Set Working Paths
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 # print(D_CONFIG_FILES)
 
@@ -67,7 +67,9 @@ def arg_parse():
                         default=IP_EXCLUDES)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
-    parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
+    parser.add_argument('-p', '--print', action='store_true', help='Print data from DB',
+                        default=False)
+    parser.add_argument('-pc', '--printconfig', action='store_true', help='Print configs data',
                         default=False)
     # args = parser.parse_args()
     return parser.parse_args()
@@ -483,10 +485,15 @@ def main():
     if args.print:
         check_db(DROP_DB)
         print_db_entries()
-        l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
-                 f'System log: {l.SYSTEM_LOG}\n'
-                 f'Server mode: {var.SERVER_MODE}')
         exit(0)
+
+    if args.printconfig:
+        l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
+                   f'System log: {l.SYSTEM_LOG}\n'
+                   f'Server mode: {var.SERVER_MODE}')
+        exit(0)
+
+
 
     if args.delete is not None:
         delete_ip(args.delete)
