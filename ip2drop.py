@@ -487,7 +487,9 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 else:
                     # TODO: Need to remove this section
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-
+                    # Add DB Record time
+                    # TODO: Need to Fix Drop time
+                    creation_date = get_current_time()
                     # Ban
                     if IPSET_ENABLED:
                         add_ip_to_ipset(ip, timeout)
@@ -517,8 +519,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         update_drop_status(2, ip)
 
                     else:
-                        # Drop time
-                        creation_date = get_current_time()
+                        # Drop / Re-Drop
                         drop_date = creation_date
                         # Un Drop end
                         undrop_date = creation_date + datetime.timedelta(seconds=timeout)
