@@ -17,6 +17,8 @@ from pathlib import Path
 # Import app
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
+from app import lib
+from app import log
 
 # TODO: mem / cpu thresholding
 # modules=['psutil','numpy'] 
@@ -59,27 +61,27 @@ D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 
 
 def log_debug(msg):
-    var.log_debug(msg)
+    log.log_debug(msg)
 
 
 def log_info(msg):
-    var.log_info(msg)
+    log.log_info(msg)
 
 
 def log_warn(msg):
-    var.log_warn(msg)
+    log.log_warn(msg)
 
 
 def log_err(msg):
-    var.log_err(msg)
+    log.log_err(msg)
 
 
 def log_crit(msg):
-    var.log_crit(msg)
+    log.log_crit(msg)
 
 
 def msg_info(msg):
-    var.log_info(msg)
+    log.log_info(msg)
     print(msg)
 
 
@@ -515,7 +517,7 @@ def main():
         check_db(DROP_DB)
         print_db_entries()
         msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
-                 f'System log: {var.SYSTEM_LOG}\n'
+                 f'System log: {log.SYSTEM_LOG}\n'
                  f'Server mode: {var.SERVER_MODE}')
         exit(0)
 
