@@ -1,5 +1,7 @@
 import os
 import configparser
+from sys import platform
+
 
 # Generators
 def get_base_dir():
@@ -20,9 +22,9 @@ def get_parent_directory():
     # Return the absolute path of the parent directory
     return os.path.abspath(relative_parent)
 
+
 # Vars
 APP_ENV = os.getenv("IP2DROP_ENV")
-CONFIG = configparser.ConfigParser()
 
 PARENT_DIR = get_parent_directory()
 CURR_DIR = get_current_dir()
@@ -35,6 +37,8 @@ RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
 RELATIVE_HELPERS_DIR = "helpers/"
 
+# Configs
+CONFIG = configparser.ConfigParser()
 STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
 DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
@@ -54,3 +58,19 @@ else:
         CONFIG.read(DEFAULT_CONFIG)
         LOADED_CONFIG = DEFAULT_CONFIG
         SERVER_MODE = 'Standard'
+
+DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
+SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
+CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
+HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
+EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
+
+# System log
+# Detect system/platform
+if platform == "linux" or platform == "linux2":
+    SYSTEM_LOG = '/var/log/ip2drop.log'
+elif platform == "darwin":
+    SYSTEM_LOG = os.path.join(EXPORTED_LOGS_DIR, 'ip2drop-script.log')
+elif platform == "win32":
+    print('Platform not supported. Exit. Bye.')
+    exit(1)

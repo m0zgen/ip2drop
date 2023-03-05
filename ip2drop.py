@@ -12,15 +12,12 @@ import datetime
 import logging
 import subprocess
 import sqlite3
-import configparser
 from collections import Counter
-from sys import platform
 from pathlib import Path
 
 # Import app
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
-# print(f'Working dir: {var.STAT_CONFIG}')
 
 # TODO: mem / cpu thresholding
 # modules=['psutil','numpy'] 
@@ -33,44 +30,30 @@ CONFIG = var.CONFIG
 IP_TIMEOUT = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
 IP_THRESHOLD = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
 EXPORT_COMMAND = CONFIG['DEFAULT']['EXPORT_COMMAND']
-# EXPORT_COMMAND = "/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'"
-# Default log file name
-# TODO: Rename EXPORT_LOG to EXPORT_LOG_NAME
 EXPORT_LOG = CONFIG['DEFAULT']['EXPORT_LOG']
 GROUP_NAME = CONFIG['DEFAULT']['GROUP_NAME']
-
 IP_EXCLUDES = CONFIG['MAIN']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['MAIN']['IPSET_NAME']
-
 IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
+# Datetime Format for Journalctl exported logs
+DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+TODAY = datetime.date.today()
+IP_NONE = "None"
+
 # Set Working Paths
-DB_DIR = os.path.join(BASE_DIR, var.RELATIVE_DB_DIR)
-SRC_DIR = os.path.join(BASE_DIR, var.RELATIVE_SRC_DIR)
-CONF_DIR = os.path.join(BASE_DIR, var.RELATIVE_CONF_DIR)
-HELPERS_DIR = os.path.join(BASE_DIR, var.RELATIVE_HELPERS_DIR)
-EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, var.RELATIVE_LOGS_DIR)
+DB_DIR = var.DB_DIR
+SRC_DIR = var.SRC_DIR
+CONF_DIR = var.CONF_DIR
+HELPERS_DIR = var.CONF_DIR
+EXPORTED_LOGS_DIR = var.EXPORTED_LOGS_DIR
 
 # Database Schema
 DROP_DB = os.path.join(DB_DIR, 'db.sqlite3')
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
-# Datetime Format for Journalctl exported logs
-DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
-TODAY = datetime.date.today()
-
-IP_NONE = "None"
-
-# Detect system/platform
-if platform == "linux" or platform == "linux2":
-    SYSTEM_LOG = '/var/log/ip2drop.log'
-elif platform == "darwin":
-    SYSTEM_LOG = os.path.join(EXPORTED_LOGS_DIR, 'ip2drop-script.log')
-elif platform == "win32":
-    print('Platform not supported. Exit. Bye.')
-    exit(1)
 
 # Conf.d loader
 D_CONFIG_FILES = []
@@ -85,6 +68,8 @@ for path in os.listdir(CONF_DIR):
 
 # Logger
 # TODO: Add -v, --verbose as DEBUG mode
+
+SYSTEM_LOG = var.SYSTEM_LOG
 logging.basicConfig(filename=SYSTEM_LOG,
                     filemode='a',
                     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
@@ -550,6 +535,7 @@ def main():
         check_db(DROP_DB)
         print_db_entries()
         msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
+                 f'System log: {SYSTEM_LOG}\n'
                  f'Server mode: {var.SERVER_MODE}')
         exit(0)
 
