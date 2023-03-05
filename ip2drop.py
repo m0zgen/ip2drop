@@ -145,6 +145,24 @@ def msg_info(msg):
     print(msg)
 
 
+# Arguments parser
+def arg_parse():
+    parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
+    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
+    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
+    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
+    parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
+    parser.add_argument('-g', '--group', dest='group', type=str, help='Grouping rule name', default=GROUP_NAME)
+    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
+    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
+                        default=IP_EXCLUDES)
+    parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
+                        default=False)
+    parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
+                        default=False)
+    # args = parser.parse_args()
+    return parser.parse_args()
+
 # Actions
 
 # FS Operations
@@ -465,7 +483,6 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 if showstat:
                     print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
                     log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
-                    found_count = increment(found_count)
 
                 else:
                     # TODO: Need to remove this section
@@ -511,34 +528,13 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
-                    found_count = increment(found_count)
+                    # found_count = increment(found_count)
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
     if found_count == 0:
-        log_info(f'Info: Thread does not found.')
-        print(f'Info: Thread does not found.')
+        msg_info(f'Info: Thread does not found.')
 
     # print(f'Found count: {found_count}')
-
-
-# Arguments parser
-def arg_parse():
-    parser = argparse.ArgumentParser(description=ARG_DEFAULT_MSG)
-    parser.add_argument('-c', '--command', dest='command', type=str, help='Command for execute', default=EXPORT_COMMAND)
-    parser.add_argument('-l', '--logfile', dest='logfile', type=str, help='Log file name', default=EXPORT_LOG)
-    parser.add_argument('-t', '--threshold', dest='threshold', type=int, help='Dropping time', default=IP_THRESHOLD)
-    parser.add_argument('-o', '--timeout', dest='timeout', type=int, help='Un-drop time', default=IP_TIMEOUT)
-    parser.add_argument('-g', '--group', dest='group', type=str, help='Grouping rule name', default=GROUP_NAME)
-    parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
-    parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
-                        default=IP_EXCLUDES)
-    parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
-                        default=False)
-    parser.add_argument('-p', '--print', action='store_true', help='Print data drom DB',
-                        default=False)
-
-    # args = parser.parse_args()
-    return parser.parse_args()
 
 
 # Main
