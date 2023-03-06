@@ -3,19 +3,19 @@
 .fleet
 .code
 
+# OS
+.DS_Store
+
 # DIRs
-logs
 db
+logs
+config-prod.d
 
 # Files
 .prod
 config-prod.ini
-config-prod.d
 helpers/ipset_status_done
 helpers/packages_status_done
-
-# DB
-db.sql
 
 # Tests
 tests
@@ -38,4 +38,3 @@ venv.bak/
 __pycache__/
 *.py[cod]
 *$py.class
-
