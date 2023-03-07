@@ -12,7 +12,7 @@ APP_ENV = os.getenv("IP2DROP_ENV")
 
 PARENT_DIR = lib.get_parent_directory()
 CURR_DIR = lib.get_current_dir()
-BASE_DIR = lib.get_base_dir()
+BASE_DIR = lib.get_script_dir()
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"

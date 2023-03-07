@@ -10,8 +10,22 @@ def get_base_dir():
     return os.path.abspath(base)
 
 
+def up(n, nth_dir=os.getcwd()):
+    while n != 0:
+        nth_dir = os.path.dirname(nth_dir)
+        n -= 1
+    print(nth_dir)
+    return nth_dir
+
+
 def get_current_dir():
     return os.path.dirname(os.path.abspath(__file__))
+
+
+def get_script_dir():
+    current = get_current_dir()
+    up_dir = os.path.dirname(current)
+    return up_dir
 
 
 def get_parent_directory():
@@ -40,3 +54,7 @@ def append_id(filename):
     result = "{name}_{uid}{ext}".format(name=name, uid=TODAY.strftime("%d_%m_%Y"), ext=ext)
     # msg_info(f'Result: {result}')
     return result
+
+
+get_script_dir()
+up
