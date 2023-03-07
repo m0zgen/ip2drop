@@ -22,6 +22,10 @@ def get_current_dir():
     return os.path.dirname(os.path.abspath(__file__))
 
 
+def get_up_dir():
+    return os.path.dirname(get_current_dir())
+
+
 def get_script_dir():
     current = get_current_dir()
     up_dir = os.path.dirname(current)
