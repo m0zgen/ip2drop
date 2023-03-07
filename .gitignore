@@ -3,9 +3,13 @@
 .fleet
 .code
 
+# OS
+.DS_Store
+
 # DIRs
-logs
 db
+logs
+config-prod.d
 
 # Files
 .prod
@@ -13,11 +17,24 @@ config-prod.ini
 helpers/ipset_status_done
 helpers/packages_status_done
 
-# DB
-db.sql
-
 # Tests
 tests
 test
 temp
 tmp
+
+# Venv
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+# Additional info reference:
+# https://github.com/github/gitignore/blob/main/Python.gitignore
+__pycache__/
+*.py[cod]
+*$py.class
