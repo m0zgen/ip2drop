@@ -35,6 +35,6 @@ venv.bak/
 # Byte-compiled / optimized / DLL files
 # Additional info reference:
 # https://github.com/github/gitignore/blob/main/Python.gitignore
-__pycache__/
+**__pycache__
 *.py[cod]
 *$py.class
