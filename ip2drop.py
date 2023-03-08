@@ -395,7 +395,11 @@ def _review_exists(ip):
     creation_date = get_current_time()
     current_timeout = get_timeout(ip)
     current_count = get_drop_count(ip)
-    last_scan_date = get_last_scan_time()[1]
+    try:
+        last_scan_date = get_last_scan_time()[1]
+    except:
+        add_routine_scan_time(get_current_time())
+
     # last_log_time =
 
     # Format: 2023-02-11 18:27:50.192957
@@ -528,9 +532,11 @@ def main():
         exit(0)
 
     if args.printconfig:
+        last_scan = get_last_scan_time()
         l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
                    f'System log: {l.SYSTEM_LOG}\n'
-                   f'Server mode: {var.SERVER_MODE}')
+                   f'Server mode: {var.SERVER_MODE}\n'
+                   f'Last scan: {last_scan}')
         exit(0)
 
     if args.delete is not None:
@@ -546,10 +552,8 @@ def main():
     l.log_info(f'ip2drop started with params:')
     l.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
-    # Execute command with export results to log
+    # Main functions
     export_log(args.command, ctl_log)
-    # Exported log processing
-    # TODO: add to get_log timeout arg
     get_log(ctl_log, args.threshold, args.timeout, args.group, args.excludes, args.stat)
 
     # Each configs
