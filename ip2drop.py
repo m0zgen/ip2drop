@@ -45,7 +45,6 @@ IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 # Datetime Format for Journalctl exported logs
 DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 TODAY = datetime.date.today()
-RUNTIME = datetime.datetime.now()
 IP_NONE = "None"
 
 # Database Schema
@@ -55,6 +54,8 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Conf.d loader
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
+
+
 # print(D_CONFIG_FILES)
 
 # Arguments parser
@@ -72,6 +73,8 @@ def arg_parse():
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
     parser.add_argument('-p', '--print', action='store_true', help='Print data from DB',
+                        default=False)
+    parser.add_argument('-pr', '--printroutines', action='store_true', help='Print routines from DB',
                         default=False)
     parser.add_argument('-pc', '--printconfig', action='store_true', help='Print configs data',
                         default=False)
@@ -145,11 +148,12 @@ def create_db_schema():
     try:
         # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
         conn = sqlite3.connect(DROP_DB)
-
         print(f'Checking {DROP_DB} schema...')
+
         with open(DROP_DB_SCHEMA, 'r') as f:
             schema = f.read()
             conn.executescript(schema)
+
         # print("Done")
         # conn.close()
     except sqlite3.Error as error:
@@ -206,19 +210,6 @@ def update_drop_count(count, ip):
     conn.commit()
     print("Update Status Successful")
     conn.close()
-
-
-def update_last_scan_date(last_scan, ip):
-    conn = sqlite3.connect(DROP_DB)
-    cur = conn.cursor()
-    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
-    cur.execute("""UPDATE ip2drop SET last_scan = :last_scan WHERE IP =:IP """, {'last_scan': last_scan, 'IP': ip})
-    conn.commit()
-    print("Update Runtime Successful")
-    conn.close()
-
-
-# def get_latest_scan_time():
 
 
 def get_drop_status(ip):
@@ -288,6 +279,40 @@ def print_db_entries():
     for row in cur.execute('SELECT * FROM ip2drop;'):
         print(row)
     conn.close()
+
+
+def print_routine_entries():
+    l.msg_info(f'Mode: Print Routine records.')
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    for row in cur.execute('SELECT * FROM routines;'):
+        print(row)
+    conn.close()
+
+
+def update_routine_record(last_scan):
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
+    # cur.execute("update routines set last_scan = (?)", (last_scan))
+    cur.execute("UPDATE routines SET last_scan = :last_scan", {'last_scan': last_scan})
+    conn.commit()
+    print("Update Runtime Successful")
+    conn.close()
+
+
+def add_routine_scan_time(last_scan):
+    conn = sqlite3.connect(DROP_DB)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO routines VALUES (NULL, ?)", (last_scan,))
+    # conn.execute("INSERT INTO CAMPAIGNS VALUES (?, ?, ?, ?)",
+    #              (None, campaign_name, campaign_username, campaign_password))
+    conn.commit()
+    print("Add Runtime Successful")
+    conn.close()
+
+# def get_latest_scan_time():
+
 
 
 # Firewall Operations
@@ -498,6 +523,11 @@ def main():
         print_db_entries()
         exit(0)
 
+    if args.printroutines:
+        check_db(DROP_DB)
+        print_routine_entries()
+        exit(0)
+
     if args.printconfig:
         l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
                    f'System log: {l.SYSTEM_LOG}\n'
@@ -537,6 +567,9 @@ def main():
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
                 get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
+    run_time = get_current_time()
+    print(run_time)
+    add_routine_scan_time(run_time)
 
 
 # Init starter
