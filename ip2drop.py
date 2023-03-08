@@ -167,11 +167,11 @@ def check_db(database_path):
         create_db_schema()
 
 
-def add_drop_ip(ip, ip_int, status, count, timeout, drop_date, date_added, last_scan, group):
+def add_drop_ip(ip, ip_int, status, count, timeout, drop_date, date_added, group):
     conn = sqlite3.connect(DROP_DB)
     cursor = conn.cursor()
-    params = (ip, ip_int, status, count, timeout, drop_date, date_added, last_scan, group)
-    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?,?,?)", params)
+    params = (ip, ip_int, status, count, timeout, drop_date, date_added, group)
+    cursor.execute("INSERT INTO ip2drop VALUES (?,?,?,?,?,?,?,?)", params)
     conn.commit()
     print('Drop Entry Created Successful')
     conn.close()
@@ -202,9 +202,19 @@ def update_drop_count(count, ip):
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
-    cur.execute("""UPDATE ip2drop SET COUNT = :COUNT WHERE IP =:IP """, {'STATUS': count, 'IP': ip})
+    cur.execute("""UPDATE ip2drop SET COUNT = :COUNT WHERE IP =:IP """, {'COUNT': count, 'IP': ip})
     conn.commit()
     print("Update Status Successful")
+    conn.close()
+
+
+def update_last_scan_date(last_scan, ip):
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
+    cur.execute("""UPDATE ip2drop SET last_scan = :last_scan WHERE IP =:IP """, {'last_scan': last_scan, 'IP': ip})
+    conn.commit()
+    print("Update Runtime Successful")
     conn.close()
 
 
@@ -435,7 +445,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         undrop_date = creation_date + datetime.timedelta(seconds=timeout)
 
                         # Add to DB
-                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, RUNTIME, group_name)
+                        add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, group_name)
                         l.log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
