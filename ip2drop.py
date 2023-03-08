@@ -395,7 +395,11 @@ def _review_exists(ip):
     creation_date = get_current_time()
     current_timeout = get_timeout(ip)
     current_count = get_drop_count(ip)
-    last_scan_date = get_last_scan_time()[1]
+    try:
+        last_scan_date = get_last_scan_time()[1]
+    except:
+        add_routine_scan_time(get_current_time())
+
     # last_log_time =
 
     # Format: 2023-02-11 18:27:50.192957
