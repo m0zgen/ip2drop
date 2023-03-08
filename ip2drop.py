@@ -290,29 +290,22 @@ def print_routine_entries():
     conn.close()
 
 
-def update_routine_record(last_scan):
-    conn = sqlite3.connect(DROP_DB)
-    cur = conn.cursor()
-    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
-    # cur.execute("update routines set last_scan = (?)", (last_scan))
-    cur.execute("UPDATE routines SET last_scan = :last_scan", {'last_scan': last_scan})
-    conn.commit()
-    print("Update Runtime Successful")
-    conn.close()
-
-
 def add_routine_scan_time(last_scan):
     conn = sqlite3.connect(DROP_DB)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO routines VALUES (NULL, ?)", (last_scan,))
-    # conn.execute("INSERT INTO CAMPAIGNS VALUES (?, ?, ?, ?)",
-    #              (None, campaign_name, campaign_username, campaign_password))
     conn.commit()
     print("Add Runtime Successful")
     conn.close()
 
-# def get_latest_scan_time():
 
+def get_last_scan_time():
+    conn = sqlite3.connect(DROP_DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM routines ORDER BY id DESC LIMIT 1")
+    result = cursor.fetchone()
+    conn.close()
+    return result
 
 
 # Firewall Operations
@@ -399,6 +392,8 @@ def _review_exists(ip):
     creation_date = get_current_time()
     current_timeout = get_timeout(ip)
     current_count = get_drop_count(ip)
+    last_scan_time = get_last_scan_time()
+    print(f'Last scan: {last_scan_time}')
 
     # Format: 2023-02-11 18:27:50.192957
     time_difference = creation_date - datetime.datetime.strptime(current_timeout,
@@ -419,6 +414,7 @@ def _review_exists(ip):
 # General
 def get_log(log, threshold, timeout, group_name, excludes, showstat):
     l.msg_info(f'Info: Processing log: {log}')
+    last_scan_date = get_last_scan_time()[1]
     found_count = 0
 
     with open(log, "r") as f:
@@ -567,9 +563,8 @@ def main():
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
                 get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
-    run_time = get_current_time()
-    print(run_time)
-    add_routine_scan_time(run_time)
+
+    add_routine_scan_time(get_current_time())
 
 
 # Init starter
