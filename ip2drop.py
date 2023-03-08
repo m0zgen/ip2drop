@@ -54,10 +54,7 @@ ARG_DEFAULT_MSG = "Drop IP Information"
 
 # Conf.d loader
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
-
-
 # print(D_CONFIG_FILES)
-
 
 # Arguments parser
 # ------------------------------------------------------------------------------------------------------/
@@ -98,11 +95,6 @@ def check_file(file):
     if not os.path.exists(file):
         open(file, 'w').close()
         l.msg_info(f'Log file: {file} created. Done.')
-
-
-def increment(number):
-    number += 1
-    return number
 
 
 # Time operations
@@ -213,6 +205,9 @@ def update_drop_count(count, ip):
     conn.commit()
     print("Update Status Successful")
     conn.close()
+
+
+# def get_latest_scan_time():
 
 
 def get_drop_status(ip):
@@ -381,7 +376,7 @@ def _review_exists(ip):
     l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
 
     # Update in DB
-    current_count = increment(current_count)
+    current_count = lib.increment(current_count)
     update_drop_status(current_count, ip)
 
 
@@ -401,7 +396,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
             # Checking excludes list
             if ip in exclude_from_check:
                 l.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
-                found_count = increment(found_count)
+                found_count = lib.increment(found_count)
 
             # Checking threshold
             elif count >= threshold and ip != IP_NONE:
@@ -409,7 +404,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
-                found_count = increment(found_count)
+                found_count = lib.increment(found_count)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:

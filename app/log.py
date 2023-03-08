@@ -3,7 +3,7 @@ import sys
 import logging
 from pathlib import Path
 from sys import platform
-# Import app
+
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from . import var
 

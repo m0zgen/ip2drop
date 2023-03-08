@@ -60,5 +60,6 @@ def append_id(filename):
     return result
 
 
-get_script_dir()
-up
+def increment(number):
+    number += 1
+    return number
