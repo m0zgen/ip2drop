@@ -308,6 +308,9 @@ def get_last_scan_time():
     return result
 
 
+# def get_last_log_time(log):
+
+
 # Firewall Operations
 # ------------------------------------------------------------------------------------------------------/
 def add_ip_to_firewalld(ip):
@@ -392,8 +395,8 @@ def _review_exists(ip):
     creation_date = get_current_time()
     current_timeout = get_timeout(ip)
     current_count = get_drop_count(ip)
-    last_scan_time = get_last_scan_time()
-    print(f'Last scan: {last_scan_time}')
+    last_scan_date = get_last_scan_time()[1]
+    # last_log_time =
 
     # Format: 2023-02-11 18:27:50.192957
     time_difference = creation_date - datetime.datetime.strptime(current_timeout,
@@ -414,7 +417,7 @@ def _review_exists(ip):
 # General
 def get_log(log, threshold, timeout, group_name, excludes, showstat):
     l.msg_info(f'Info: Processing log: {log}')
-    last_scan_date = get_last_scan_time()[1]
+    # TODO: add to routines table:
     found_count = 0
 
     with open(log, "r") as f:
