@@ -6,8 +6,6 @@ create table if not exists ip2drop (
     'timeout'       TIMESTAMP,
     'drop_date'     TIMESTAMP,
     'creation_date' TIMESTAMP,
+    'last_scan'     TIMESTAMP,
     'group'         text
-);
-create table if not exists routines (
-    'last_scan'     TIMESTAMP
 );
