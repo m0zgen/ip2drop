@@ -8,3 +8,7 @@ create table if not exists ip2drop (
     'creation_date' TIMESTAMP,
     'group'         text
 );
+create table if not exists routines (
+    'id'            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    'last_scan'     TIMESTAMP
+);

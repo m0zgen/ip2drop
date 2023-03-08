@@ -58,7 +58,6 @@ D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 
 # print(D_CONFIG_FILES)
 
-
 # Arguments parser
 # ------------------------------------------------------------------------------------------------------/
 def arg_parse():
@@ -74,6 +73,8 @@ def arg_parse():
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
     parser.add_argument('-p', '--print', action='store_true', help='Print data from DB',
+                        default=False)
+    parser.add_argument('-pr', '--printroutines', action='store_true', help='Print routines from DB',
                         default=False)
     parser.add_argument('-pc', '--printconfig', action='store_true', help='Print configs data',
                         default=False)
@@ -98,11 +99,6 @@ def check_file(file):
     if not os.path.exists(file):
         open(file, 'w').close()
         l.msg_info(f'Log file: {file} created. Done.')
-
-
-def increment(number):
-    number += 1
-    return number
 
 
 # Time operations
@@ -152,11 +148,12 @@ def create_db_schema():
     try:
         # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
         conn = sqlite3.connect(DROP_DB)
-
         print(f'Checking {DROP_DB} schema...')
+
         with open(DROP_DB_SCHEMA, 'r') as f:
             schema = f.read()
             conn.executescript(schema)
+
         # print("Done")
         # conn.close()
     except sqlite3.Error as error:
@@ -209,7 +206,7 @@ def update_drop_count(count, ip):
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
-    cur.execute("""UPDATE ip2drop SET COUNT = :COUNT WHERE IP =:IP """, {'STATUS': count, 'IP': ip})
+    cur.execute("""UPDATE ip2drop SET COUNT = :COUNT WHERE IP =:IP """, {'COUNT': count, 'IP': ip})
     conn.commit()
     print("Update Status Successful")
     conn.close()
@@ -282,6 +279,36 @@ def print_db_entries():
     for row in cur.execute('SELECT * FROM ip2drop;'):
         print(row)
     conn.close()
+
+
+def print_routine_entries():
+    l.msg_info(f'Mode: Print Routine records.')
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    for row in cur.execute('SELECT * FROM routines;'):
+        print(row)
+    conn.close()
+
+
+def add_routine_scan_time(last_scan):
+    conn = sqlite3.connect(DROP_DB)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO routines VALUES (NULL, ?)", (last_scan,))
+    conn.commit()
+    print("Add Runtime Successful")
+    conn.close()
+
+
+def get_last_scan_time():
+    conn = sqlite3.connect(DROP_DB)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM routines ORDER BY id DESC LIMIT 1")
+    result = cursor.fetchone()
+    conn.close()
+    return result
+
+
+# def get_last_log_time(log):
 
 
 # Firewall Operations
@@ -359,23 +386,52 @@ def export_log(command, destination):
 #     # iptools.ipv6.validate_ip(ipv6) #returns bool
 #     # TODO: need to add validation logic
 
+def _showstat(ip, count):
+    print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
+    l.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
+
+
+def _review_exists(ip):
+    creation_date = get_current_time()
+    current_timeout = get_timeout(ip)
+    current_count = get_drop_count(ip)
+    last_scan_date = get_last_scan_time()[1]
+    # last_log_time =
+
+    # Format: 2023-02-11 18:27:50.192957
+    time_difference = creation_date - datetime.datetime.strptime(current_timeout,
+                                                                 DATETIME_DEFAULT_FORMAT)
+    total_seconds = time_difference.total_seconds()
+    # print(f'Timeout: {time_difference}')
+    # print(f'Total seconds: {total_seconds}')
+    # check_start_end(current_count, time_difference, log)
+
+    # TODO: Add and update drop counts
+    l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
+
+    # Update in DB
+    current_count = lib.increment(current_count)
+    update_drop_status(current_count, ip)
+
+
 # General
 def get_log(log, threshold, timeout, group_name, excludes, showstat):
     l.msg_info(f'Info: Processing log: {log}')
+    # TODO: add to routines table:
     found_count = 0
 
     with open(log, "r") as f:
+        # Count IPv4 if IPv6 - return None
         ips = Counter(extract_ip(line) for line in f)
         exclude_from_check = excludes.split(' ')
         # print(exclude_from_check)
 
         for ip, count in ips.items():
             # print(ip, '->', count)
-
             # Checking excludes list
             if ip in exclude_from_check:
                 l.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
-                found_count = increment(found_count)
+                found_count = lib.increment(found_count)
 
             # Checking threshold
             elif count >= threshold and ip != IP_NONE:
@@ -383,12 +439,11 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
-                found_count = increment(found_count)
+                found_count = lib.increment(found_count)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
-                    print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
-                    l.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
+                    _showstat(ip, count)
 
                 else:
                     # TODO: Need to remove this section
@@ -403,24 +458,9 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         add_ip_to_firewalld(ip)
 
                     # IN DEVELOP:
+                    # Exists in Drop
                     if ip_exist(ip):
-
-                        current_timeout = get_timeout(ip)
-                        current_count = get_drop_count(ip)
-
-                        # Format: 2023-02-11 18:27:50.192957
-                        time_difference = creation_date - datetime.datetime.strptime(current_timeout,
-                                                                                     DATETIME_DEFAULT_FORMAT)
-                        total_seconds = time_difference.total_seconds()
-                        # print(f'Timeout: {time_difference}')
-                        # print(f'Total seconds: {total_seconds}')
-                        # check_start_end(current_count, time_difference, log)
-
-                        # TODO: Add and update drop counts
-                        l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
-
-                        # Update in DB
-                        update_drop_status(2, ip)
+                        _review_exists(ip)
 
                     else:
                         # Drop / Re-Drop
@@ -482,6 +522,11 @@ def main():
         print_db_entries()
         exit(0)
 
+    if args.printroutines:
+        check_db(DROP_DB)
+        print_routine_entries()
+        exit(0)
+
     if args.printconfig:
         l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
                    f'System log: {l.SYSTEM_LOG}\n'
@@ -521,6 +566,8 @@ def main():
                 check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
                 get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
+
+    add_routine_scan_time(get_current_time())
 
 
 # Init starter
