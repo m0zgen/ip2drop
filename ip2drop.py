@@ -359,19 +359,45 @@ def export_log(command, destination):
 #     # iptools.ipv6.validate_ip(ipv6) #returns bool
 #     # TODO: need to add validation logic
 
+def _showstat(ip, count):
+    print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
+    l.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
+
+
+def _review_exists(ip):
+    creation_date = get_current_time()
+    current_timeout = get_timeout(ip)
+    current_count = get_drop_count(ip)
+
+    # Format: 2023-02-11 18:27:50.192957
+    time_difference = creation_date - datetime.datetime.strptime(current_timeout,
+                                                                 DATETIME_DEFAULT_FORMAT)
+    total_seconds = time_difference.total_seconds()
+    # print(f'Timeout: {time_difference}')
+    # print(f'Total seconds: {total_seconds}')
+    # check_start_end(current_count, time_difference, log)
+
+    # TODO: Add and update drop counts
+    l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
+
+    # Update in DB
+    current_count = increment(current_count)
+    update_drop_status(current_count, ip)
+
+
 # General
 def get_log(log, threshold, timeout, group_name, excludes, showstat):
     l.msg_info(f'Info: Processing log: {log}')
     found_count = 0
 
     with open(log, "r") as f:
+        # Count IPv4 if IPv6 - return None
         ips = Counter(extract_ip(line) for line in f)
         exclude_from_check = excludes.split(' ')
         # print(exclude_from_check)
 
         for ip, count in ips.items():
             # print(ip, '->', count)
-
             # Checking excludes list
             if ip in exclude_from_check:
                 l.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
@@ -387,8 +413,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
-                    print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
-                    l.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
+                    _showstat(ip, count)
 
                 else:
                     # TODO: Need to remove this section
@@ -403,24 +428,9 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                         add_ip_to_firewalld(ip)
 
                     # IN DEVELOP:
+                    # Exists in Drop
                     if ip_exist(ip):
-
-                        current_timeout = get_timeout(ip)
-                        current_count = get_drop_count(ip)
-
-                        # Format: 2023-02-11 18:27:50.192957
-                        time_difference = creation_date - datetime.datetime.strptime(current_timeout,
-                                                                                     DATETIME_DEFAULT_FORMAT)
-                        total_seconds = time_difference.total_seconds()
-                        # print(f'Timeout: {time_difference}')
-                        # print(f'Total seconds: {total_seconds}')
-                        # check_start_end(current_count, time_difference, log)
-
-                        # TODO: Add and update drop counts
-                        l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
-
-                        # Update in DB
-                        update_drop_status(2, ip)
+                        _review_exists(ip)
 
                     else:
                         # Drop / Re-Drop
