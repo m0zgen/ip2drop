@@ -532,9 +532,11 @@ def main():
         exit(0)
 
     if args.printconfig:
+        last_scan = get_last_scan_time()
         l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
                    f'System log: {l.SYSTEM_LOG}\n'
-                   f'Server mode: {var.SERVER_MODE}')
+                   f'Server mode: {var.SERVER_MODE}\n'
+                   f'Last scan: {last_scan}')
         exit(0)
 
     if args.delete is not None:
@@ -550,10 +552,8 @@ def main():
     l.log_info(f'ip2drop started with params:')
     l.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
-    # Execute command with export results to log
+    # Main functions
     export_log(args.command, ctl_log)
-    # Exported log processing
-    # TODO: add to get_log timeout arg
     get_log(ctl_log, args.threshold, args.timeout, args.group, args.excludes, args.stat)
 
     # Each configs
