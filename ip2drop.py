@@ -14,6 +14,7 @@ import subprocess
 import sqlite3
 from collections import Counter
 from pathlib import Path
+import json
 
 # TODO: mem / cpu thresholding
 # modules=['psutil','numpy']
@@ -485,11 +486,35 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
     # print(f'Found count: {found_count}')
 
+def get_app_json(file):
+    data = ""
+    try:
+        with open(file) as json_file:
+            data = json.load(json_file)
+            # print(data['ip2drop']['author'])
+            return data
+    except:
+        return data
+
+
+def check_app_versioning():
+    app_json_data = get_app_json('app.json')
+    if app_json_data != "":
+        # print(app_json_data)
+        previous_db = app_json_data['ip2drop']['previous_database_version']
+        current_db = app_json_data['ip2drop']['current_database_version']
+        if previous_db < current_db:
+            print(f'Need update DB')
+    else:
+        print(f'App JSON not found')
+
 
 # Main
 # ------------------------------------------------------------------------------------------------------/
 def main():
     args = arg_parse()
+
+    check_app_versioning()
 
     # Dirty step
     # TODO: Need to make more beauty)
