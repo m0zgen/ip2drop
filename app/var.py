@@ -20,12 +20,14 @@ RELATIVE_DB_DIR = "db/"
 RELATIVE_LOGS_DIR = "logs/"
 RELATIVE_CONF_DIR = "conf.d/"
 RELATIVE_HELPERS_DIR = "helpers/"
+RELATIVE_BACKUP_DIR = "backup/"
 
 DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
 SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
 CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
 HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
+BACKUP_DIR = os.path.join(BASE_DIR, RELATIVE_BACKUP_DIR)
 
 # Configs
 CONFIG = configparser.ConfigParser()

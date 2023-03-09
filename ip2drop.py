@@ -49,7 +49,8 @@ TODAY = datetime.date.today()
 IP_NONE = "None"
 
 # Database Schema
-DROP_DB = os.path.join(var.DB_DIR, 'db.sqlite3')
+DROP_DB_NAME = 'db.sqlite3'
+DROP_DB = os.path.join(var.DB_DIR, DROP_DB_NAME)
 DROP_DB_SCHEMA = os.path.join(var.SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
 
@@ -504,7 +505,14 @@ def check_app_versioning():
         previous_db = app_json_data['ip2drop']['previous_database_version']
         current_db = app_json_data['ip2drop']['current_database_version']
         if previous_db < current_db:
-            print(f'Need update DB')
+            l.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
+            check_dir(var.BACKUP_DIR)
+            postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
+            new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
+            print(new_name)
+            os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+            # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
+            create_db_schema()
     else:
         print(f'App JSON not found')
 
@@ -562,6 +570,7 @@ def main():
                    f'System log: {l.SYSTEM_LOG}\n'
                    f'Server mode: {var.SERVER_MODE}\n'
                    f'Last scan: {last_scan}')
+        check_app_versioning()
         exit(0)
 
     if args.delete is not None:
