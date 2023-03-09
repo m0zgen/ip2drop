@@ -1,3 +1,4 @@
+import datetime
 import os
 import sys
 import logging
@@ -7,7 +8,6 @@ from sys import platform
 
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from . import var
-
 
 # System log
 # Detect system/platform
@@ -74,6 +74,7 @@ def append_id(filename):
     # msg_info(f'Result: {result}')
     return result
 
+
 def check_dir(dest):
     is_exist = os.path.exists(dest)
     if not is_exist:
@@ -81,6 +82,22 @@ def check_dir(dest):
         os.makedirs(dest)
         msg_info(f'Log catalog: {dest} created. Done.')
 
+
+def check_file(file):
+    # Create the file if it does not exist
+    if not os.path.exists(file):
+        open(file, 'w').close()
+        msg_info(f'Log file: {file} created. Done.')
+
+
 def increment(number):
     number += 1
     return number
+
+
+def get_current_date():
+    return datetime.date.today()
+
+
+def get_current_time():
+    return datetime.datetime.now()
