@@ -1,18 +1,49 @@
 import os
-import sys
 import configparser
-from pathlib import Path
 
-# Import app
-sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
-from . import lib
+# Functions
+def get_base_dir():
+    base = os.path.join(os.getcwd())  # .. means parent directory
+
+    # Return the absolute path of the parent directory
+    return os.path.abspath(base)
+
+
+def up(n, nth_dir=os.getcwd()):
+    while n != 0:
+        nth_dir = os.path.dirname(nth_dir)
+        n -= 1
+    print(nth_dir)
+    return nth_dir
+
+
+def get_current_dir():
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+def get_up_dir():
+    return os.path.dirname(get_current_dir())
+
+
+def get_script_dir():
+    current = get_current_dir()
+    up_dir = os.path.dirname(current)
+    return up_dir
+
+
+def get_parent_directory():
+    # Create a relative path to the parent of the current working directory
+    relative_parent = os.path.join(os.getcwd(), "..")  # .. means parent directory
+    # Return the absolute path of the parent directory
+    return os.path.abspath(relative_parent)
+
 
 # Vars
 APP_ENV = os.getenv("IP2DROP_ENV")
 
-PARENT_DIR = lib.get_parent_directory()
-CURR_DIR = lib.get_current_dir()
-BASE_DIR = lib.get_up_dir()
+PARENT_DIR = get_parent_directory()
+CURR_DIR = get_current_dir()
+BASE_DIR = get_up_dir()
 
 # Relative paths
 RELATIVE_SRC_DIR = "src/"
@@ -61,6 +92,7 @@ else:
         CONFIG.read(DEFAULT_CONFIG)
         LOADED_CONFIG = DEFAULT_CONFIG
         SERVER_MODE = 'Standard'
+
 
 # Load and export configs from conf.d
 def get_config_files():

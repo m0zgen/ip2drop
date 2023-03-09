@@ -22,7 +22,6 @@ import json
 # Import app
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
-from app import log as l
 from app import lib
 
 # Variables
@@ -88,19 +87,14 @@ def arg_parse():
 # ------------------------------------------------------------------------------------------------------/
 
 # FS Operations
-def check_dir(dest):
-    is_exist = os.path.exists(dest)
-    if not is_exist:
-        # Create a new directory because it does not exist
-        os.makedirs(dest)
-        l.msg_info(f'Log catalog: {dest} created. Done.')
+
 
 
 def check_file(file):
     # Create the file if it does not exist
     if not os.path.exists(file):
         open(file, 'w').close()
-        l.msg_info(f'Log file: {file} created. Done.')
+        lib.msg_info(f'Log file: {file} created. Done.')
 
 
 # Time operations
@@ -275,7 +269,7 @@ def ip_exist(ip):
 
 
 def print_db_entries():
-    l.msg_info(f'Mode: Print DB records.')
+    lib.msg_info(f'Mode: Print DB records.')
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     for row in cur.execute('SELECT * FROM ip2drop;'):
@@ -284,7 +278,7 @@ def print_db_entries():
 
 
 def print_routine_entries():
-    l.msg_info(f'Mode: Print Routine records.')
+    lib.msg_info(f'Mode: Print Routine records.')
     conn = sqlite3.connect(DROP_DB)
     cur = conn.cursor()
     for row in cur.execute('SELECT * FROM routines;'):
@@ -317,12 +311,12 @@ def get_last_scan_time():
 # ------------------------------------------------------------------------------------------------------/
 def add_ip_to_firewalld(ip):
     os.system("firewall-cmd --zone=drop --add-source=" + ip)
-    l.log_warn(f'{ip} added to firewalld.')
+    lib.log_warn(f'{ip} added to firewalld.')
 
 
 def remove_ip_from_firewall(ip):
     os.system("firewall-cmd --zone=drop --remove-source=" + ip)
-    l.log_warn(f'{ip} removed from firewalld.')
+    lib.log_warn(f'{ip} removed from firewalld.')
 
 
 def add_ip_to_ipset(ip, timeout):
@@ -346,10 +340,10 @@ def delete_ip(ip):
         else:
             remove_ip_from_firewall(ip)
 
-        l.log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
+        lib.log_info(f'IP: {ip} deleted from DB: {DROP_DB}')
     else:
         print(f'IP: {ip} not exist in DB')
-        l.log_info(f'IP: {ip} not exist in DB')
+        lib.log_info(f'IP: {ip} not exist in DB')
 
 
 # Log parsing
@@ -390,7 +384,7 @@ def export_log(command, destination):
 
 def _showstat(ip, count):
     print(f'Warning: Found - {ip} -> Threshold: {count} (Show stat found without drop)')
-    l.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
+    lib.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
 
 
 def _review_exists(ip):
@@ -413,7 +407,7 @@ def _review_exists(ip):
     # check_start_end(current_count, time_difference, log)
 
     # TODO: Add and update drop counts
-    l.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
+    lib.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
 
     # Update in DB
     current_count = lib.increment(current_count)
@@ -422,7 +416,7 @@ def _review_exists(ip):
 
 # General
 def get_log(log, threshold, timeout, group_name, excludes, showstat):
-    l.msg_info(f'Info: Processing log: {log}')
+    lib.msg_info(f'Info: Processing log: {log}')
     # TODO: add to routines table:
     found_count = 0
 
@@ -436,7 +430,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
             # print(ip, '->', count)
             # Checking excludes list
             if ip in exclude_from_check:
-                l.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
+                lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
             # Checking threshold
@@ -476,14 +470,14 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
                         # Add to DB
                         add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, group_name)
-                        l.log_info(f'Add drop IP to DB: {ip}')
+                        lib.log_info(f'Add drop IP to DB: {ip}')
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
     if found_count == 0:
-        l.msg_info(f'Info: Thread does not found.')
+        lib.msg_info(f'Info: Thread does not found.')
 
     # print(f'Found count: {found_count}')
 
@@ -505,8 +499,8 @@ def check_app_versioning():
         previous_db = app_json_data['ip2drop']['previous_database_version']
         current_db = app_json_data['ip2drop']['current_database_version']
         if previous_db < current_db:
-            l.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
-            check_dir(var.BACKUP_DIR)
+            lib.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
+            lib.check_dir(var.BACKUP_DIR)
             postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
             new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
             print(new_name)
@@ -523,9 +517,9 @@ def check_app_versioning():
 
 def print_config():
     last_scan = get_last_scan_time()
-    l.msg_info(
+    lib.msg_info(
         f'Loaded config: {var.LOADED_CONFIG}\n'
-        f'System log: {l.SYSTEM_LOG}\n'
+        f'System log: {lib.SYSTEM_LOG}\n'
         f'Server mode: {var.SERVER_MODE}\n'
         f'Last scan: {last_scan}')
 
@@ -534,7 +528,7 @@ def print_config():
     site = app_json_data['ip2drop']['site']
     db_version = app_json_data['ip2drop']['current_database_version']
     script_version = app_json_data['ip2drop']['current_script_version']
-    l.msg_info(
+    lib.msg_info(
         f'DB Version: {db_version}\n'
         f'ip2drop Version: {script_version}\n'
         f'Author: {author}\n'
@@ -557,12 +551,12 @@ def main():
         # bash_command(cmd)
         res = subprocess.call([set_script, IPSET_NAME])
         if res:
-            l.msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
+            lib.msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
             exit(1)
 
     # Create db if not exists
     if not os.path.exists(var.DB_DIR):
-        check_dir(var.DB_DIR)
+        lib.check_dir(var.DB_DIR)
         create_db_schema()
 
     # Log file for command processing
@@ -571,11 +565,11 @@ def main():
     ctl_log = os.path.join(var.EXPORTED_LOGS_DIR, args.logfile)
 
     # Checking & creating needed dirs and files
-    check_dir(var.EXPORTED_LOGS_DIR)
+    lib.check_dir(var.EXPORTED_LOGS_DIR)
     check_file(ctl_log)
 
     if args.stat:
-        l.msg_info('Mode: Show statistics without actions')
+        lib.msg_info('Mode: Show statistics without actions')
 
     if args.print:
         check_db(DROP_DB)
@@ -600,8 +594,8 @@ def main():
 
     # print(f'Using command: {args.command}')
     # print(f'Checking threshold: {args.threshold}')
-    l.log_info(f'ip2drop started with params:')
-    l.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
+    lib.log_info(f'ip2drop started with params:')
+    lib.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
     # Main functions
     export_log(args.command, ctl_log)
