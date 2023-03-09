@@ -94,6 +94,7 @@ def increment(number):
     number += 1
     return number
 
+
 def get_current_date():
     return datetime.date.today()
 

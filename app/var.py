@@ -1,5 +1,7 @@
 import os
 import configparser
+import sqlite3
+
 
 # Functions
 def get_base_dir():
@@ -106,3 +108,29 @@ def get_config_files():
             d_config_count += 1
     return d_config_files, d_config_count
     # print(D_CONFIG_FILES)
+
+# Make DB
+def create_db_schema():
+    try:
+        # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
+        conn = sqlite3.connect(DROP_DB)
+        print(f'Checking {DROP_DB} schema...')
+
+        with open(DROP_DB_SCHEMA, 'r') as f:
+            schema = f.read()
+            conn.executescript(schema)
+
+        # print("Done")
+        # conn.close()
+    except sqlite3.Error as error:
+        print("Error while creating a sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+            print(f'Checking {DROP_DB} schema: Done.')
+
+
+def check_db(database_path):
+    is_exist = os.path.exists(database_path)
+    if not is_exist:
+        create_db_schema()

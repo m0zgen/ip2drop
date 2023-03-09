@@ -115,35 +115,6 @@ def check_start_end(current_timeout, time_difference, log):
 
 # DB Operations
 # ------------------------------------------------------------------------------------------------------/
-# TODO: Proccess db operation to def
-# Add db.sql exists testing
-
-def create_db_schema():
-    try:
-        # https://pyneng.readthedocs.io/en/latest/book/25_db/example_sqlite.html
-        conn = sqlite3.connect(DROP_DB)
-        print(f'Checking {DROP_DB} schema...')
-
-        with open(DROP_DB_SCHEMA, 'r') as f:
-            schema = f.read()
-            conn.executescript(schema)
-
-        # print("Done")
-        # conn.close()
-    except sqlite3.Error as error:
-        print("Error while creating a sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            print(f'Checking {DROP_DB} schema: Done.')
-
-
-def check_db(database_path):
-    print(f'DB: {DROP_DB}')
-    is_exist = os.path.exists(database_path)
-    if not is_exist:
-        create_db_schema()
-
 
 def add_drop_ip(ip, ip_int, status, count, timeout, drop_date, date_added, group):
     conn = sqlite3.connect(DROP_DB)
@@ -487,7 +458,7 @@ def check_app_versioning():
             print(new_name)
             os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
             # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
-            create_db_schema()
+            var.create_db_schema()
             app_json_data['ip2drop']['previous_database_version'] = current_db
 
             with open(var.APP_JSON, "w") as jsonFile:
@@ -539,7 +510,7 @@ def main():
     # Create db if not exists
     if not os.path.exists(var.DB_DIR):
         lib.check_dir(var.DB_DIR)
-        create_db_schema()
+        var.create_db_schema()
 
     # Log file for command processing
     # today_log = append_id(args.logfile)
@@ -554,12 +525,12 @@ def main():
         lib.msg_info('Mode: Show statistics without actions')
 
     if args.print:
-        check_db(DROP_DB)
+        var.check_db(DROP_DB)
         print_db_entries()
         exit(0)
 
     if args.printroutines:
-        check_db(DROP_DB)
+        var.check_db(DROP_DB)
         print_routine_entries()
         exit(0)
 
