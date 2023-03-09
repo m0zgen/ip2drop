@@ -513,6 +513,10 @@ def check_app_versioning():
             os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
             # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
             create_db_schema()
+            app_json_data['ip2drop']['previous_database_version'] = current_db
+
+            with open('app.json', "w") as jsonFile:
+                json.dump(app_json_data, jsonFile)
     else:
         print(f'App JSON not found')
 
