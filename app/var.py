@@ -35,6 +35,10 @@ STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
 DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
 
+# App JSON
+APP_JSON_NAME = 'app.json'
+APP_JSON = os.path.join(BASE_DIR, APP_JSON_NAME)
+
 # Dynamic config loader exporter
 if not os.path.exists(STAT_CONFIG):
     CONFIG.read(DEFAULT_CONFIG)

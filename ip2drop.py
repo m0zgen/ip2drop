@@ -499,7 +499,7 @@ def get_app_json(file):
 
 
 def check_app_versioning():
-    app_json_data = get_app_json('app.json')
+    app_json_data = get_app_json(var.APP_JSON)
     if app_json_data != "":
         # print(app_json_data)
         previous_db = app_json_data['ip2drop']['previous_database_version']
@@ -515,11 +515,31 @@ def check_app_versioning():
             create_db_schema()
             app_json_data['ip2drop']['previous_database_version'] = current_db
 
-            with open('app.json', "w") as jsonFile:
-                json.dump(app_json_data, jsonFile)
+            with open(var.APP_JSON, "w") as jsonFile:
+                json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)
     else:
         print(f'App JSON not found')
 
+
+def print_config():
+    last_scan = get_last_scan_time()
+    l.msg_info(
+        f'Loaded config: {var.LOADED_CONFIG}\n'
+        f'System log: {l.SYSTEM_LOG}\n'
+        f'Server mode: {var.SERVER_MODE}\n'
+        f'Last scan: {last_scan}')
+
+    app_json_data = get_app_json(var.APP_JSON)
+    author = app_json_data['ip2drop']['author']
+    site = app_json_data['ip2drop']['site']
+    db_version = app_json_data['ip2drop']['current_database_version']
+    script_version = app_json_data['ip2drop']['current_script_version']
+    l.msg_info(
+        f'DB Version: {db_version}\n'
+        f'ip2drop Version: {script_version}\n'
+        f'Author: {author}\n'
+        f'Site: {site}')
+    exit(0)
 
 # Main
 # ------------------------------------------------------------------------------------------------------/
@@ -569,13 +589,7 @@ def main():
         exit(0)
 
     if args.printconfig:
-        last_scan = get_last_scan_time()
-        l.msg_info(f'Loaded config: {var.LOADED_CONFIG}\n'
-                   f'System log: {l.SYSTEM_LOG}\n'
-                   f'Server mode: {var.SERVER_MODE}\n'
-                   f'Last scan: {last_scan}')
-        check_app_versioning()
-        exit(0)
+        print_config()
 
     if args.delete is not None:
         delete_ip(args.delete)
