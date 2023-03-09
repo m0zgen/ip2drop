@@ -9,6 +9,7 @@
 # DIRs
 db
 logs
+backup
 config-prod.d
 
 # Files
