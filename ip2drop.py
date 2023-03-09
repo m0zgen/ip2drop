@@ -545,7 +545,6 @@ def print_config():
 # ------------------------------------------------------------------------------------------------------/
 def main():
     args = arg_parse()
-
     check_app_versioning()
 
     # Dirty step
