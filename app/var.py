@@ -35,6 +35,12 @@ STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
 DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
 
+# DB
+DROP_DB_NAME = 'db.sqlite3'
+DROP_DB = os.path.join(DB_DIR, DROP_DB_NAME)
+DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
+ARG_DEFAULT_MSG = "Drop IP Information"
+
 # App JSON
 APP_JSON_NAME = 'app.json'
 APP_JSON = os.path.join(BASE_DIR, APP_JSON_NAME)

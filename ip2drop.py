@@ -49,10 +49,10 @@ TODAY = datetime.date.today()
 IP_NONE = "None"
 
 # Database Schema
-DROP_DB_NAME = 'db.sqlite3'
-DROP_DB = os.path.join(var.DB_DIR, DROP_DB_NAME)
-DROP_DB_SCHEMA = os.path.join(var.SRC_DIR, 'db_schema.sql')
-ARG_DEFAULT_MSG = "Drop IP Information"
+DROP_DB_NAME = var.DROP_DB_NAME
+DROP_DB = var.DROP_DB
+DROP_DB_SCHEMA = var.DROP_DB_SCHEMA
+ARG_DEFAULT_MSG = var.ARG_DEFAULT_MSG
 
 # Conf.d loader
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
