@@ -83,20 +83,6 @@ def arg_parse():
     return parser.parse_args()
 
 
-# Services
-# ------------------------------------------------------------------------------------------------------/
-
-# FS Operations
-
-
-
-def check_file(file):
-    # Create the file if it does not exist
-    if not os.path.exists(file):
-        open(file, 'w').close()
-        lib.msg_info(f'Log file: {file} created. Done.')
-
-
 # Time operations
 # ------------------------------------------------------------------------------------------------------/
 def check_start_end(current_timeout, time_difference, log):
@@ -104,7 +90,7 @@ def check_start_end(current_timeout, time_difference, log):
     log_time_format = '%H:%M:%S'
 
     # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
-    end_checking_time = get_current_time().strftime('%H:%M:%S')
+    end_checking_time = lib.get_current_time().strftime('%H:%M:%S')
 
     datetime_obj = datetime.datetime.strptime(current_timeout,
                                               DATETIME_DEFAULT_FORMAT)
@@ -125,14 +111,6 @@ def check_start_end(current_timeout, time_difference, log):
     # TODO: Get current time and expire time
 
     # print(f'Timeout {current_timeout}, Count: {current_count}')
-
-
-def get_current_date():
-    return datetime.date.today()
-
-
-def get_current_time():
-    return datetime.datetime.now()
 
 
 # DB Operations
@@ -388,13 +366,13 @@ def _showstat(ip, count):
 
 
 def _review_exists(ip):
-    creation_date = get_current_time()
+    creation_date = lib.get_current_time()
     current_timeout = get_timeout(ip)
     current_count = get_drop_count(ip)
     try:
         last_scan_date = get_last_scan_time()[1]
     except:
-        add_routine_scan_time(get_current_time())
+        add_routine_scan_time(lib.get_current_time())
 
     # last_log_time =
 
@@ -447,10 +425,11 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
                 else:
                     # TODO: Need to remove this section
+                    # TODO: All IP need to append to ipset through text list
                     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
                     # Add DB Record time
                     # TODO: Need to Fix Drop time
-                    creation_date = get_current_time()
+                    creation_date = lib.get_current_time()
                     # Ban
                     if IPSET_ENABLED:
                         add_ip_to_ipset(ip, timeout)
@@ -481,6 +460,7 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
 
     # print(f'Found count: {found_count}')
 
+
 def get_app_json(file):
     data = ""
     try:
@@ -494,6 +474,7 @@ def get_app_json(file):
 
 def check_app_versioning():
     app_json_data = get_app_json(var.APP_JSON)
+
     if app_json_data != "":
         # print(app_json_data)
         previous_db = app_json_data['ip2drop']['previous_database_version']
@@ -535,6 +516,7 @@ def print_config():
         f'Site: {site}')
     exit(0)
 
+
 # Main
 # ------------------------------------------------------------------------------------------------------/
 def main():
@@ -566,7 +548,7 @@ def main():
 
     # Checking & creating needed dirs and files
     lib.check_dir(var.EXPORTED_LOGS_DIR)
-    check_file(ctl_log)
+    lib.check_file(ctl_log)
 
     if args.stat:
         lib.msg_info('Mode: Show statistics without actions')
@@ -612,11 +594,11 @@ def main():
                 d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
                 d_export_log = os.path.join(var.EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
-                check_file(d_export_log)
+                lib.check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
                 get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
 
-    add_routine_scan_time(get_current_time())
+    add_routine_scan_time(lib.get_current_time())
 
 
 # Init starter
