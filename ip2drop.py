@@ -55,15 +55,20 @@ ARG_DEFAULT_MSG = var.ARG_DEFAULT_MSG
 
 # Conf.d loader
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
+# print(D_CONFIG_FILES)
 
-# Uploading
-UPLOAD_DIR_RELATIVE = CONFIG['MAIN']['UPLOAD_DIR']
-UPLOAD_DIR = os.path.join(BASE_DIR, UPLOAD_DIR_RELATIVE)
-IS_UPLOAD_ENABLED = CONFIG['MAIN'].getboolean('UPLOAD')
+# Dynamics
 HOSTNAME = CONFIG['MAIN']['HOSTNAME']
 USERNAME = CONFIG['MAIN']['USERNAME']
 
-# print(D_CONFIG_FILES)
+# Uploading
+IS_UPLOAD_ENABLED = CONFIG['MAIN'].getboolean('UPLOAD')
+UPLOAD_PREFIX = f'{HOSTNAME}'.format(HOSTNAME=lib.get_hostname())
+UPLOAD_DIR_RELATIVE = CONFIG['MAIN']['UPLOAD_DIR']
+UPLOAD_DIR = os.path.join(BASE_DIR, UPLOAD_DIR_RELATIVE)
+UPLOAD_BASE_FILE_NAME = CONFIG['MAIN']['UPLOAD_FILE']
+UPLOAD_FILE_NAME = f'{UPLOAD_PREFIX}_{UPLOAD_BASE_FILE_NAME}'
+UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 
 # Arguments parser
 # ------------------------------------------------------------------------------------------------------/
@@ -396,6 +401,9 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 # print(from_int)
                 found_count = lib.increment(found_count)
 
+                if IS_UPLOAD_ENABLED:
+                    lib.append_to_file(UPLOAD_FILE, ip)
+
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
                     _showstat(ip, count)
@@ -505,6 +513,8 @@ def main():
 
     if IS_UPLOAD_ENABLED:
         lib.check_dir(UPLOAD_DIR)
+        lib.check_file(UPLOAD_FILE)
+        lib.truncate_file(UPLOAD_FILE)
 
     # Dirty step
     # TODO: Need to make more beauty)

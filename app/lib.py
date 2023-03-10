@@ -76,13 +76,16 @@ def append_id(filename):
     # msg_info(f'Result: {result}')
     return result
 
+
 def get_hostname():
     return socket.getfqdn()
     # print(os.uname().nodename)
     # print(socket.gethostname())
 
+
 def get_username():
     return getpass.getuser()
+
 
 def check_dir(dest):
     is_exist = os.path.exists(dest)
@@ -97,6 +100,12 @@ def check_file(file):
     if not os.path.exists(file):
         open(file, 'w').close()
         msg_info(f'Log file: {file} created. Done.')
+
+
+def append_to_file(file, line):
+    with open(file, 'a') as file:
+        file.write(f'{line}\n')
+        # file.close()
 
 
 def truncate_file(file):
