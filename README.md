@@ -8,11 +8,15 @@ It is a interval-based solution, you can setup execute commands, threshold and r
 
 * `-c` - command execution. Bash or another command which `ip2drop` will run
 * `-l` - log file name. `ip2drop` will export IP addresses from this log file and this IP on threshold exceeding
-* `-t` - threshold. Threshold exceeding value. Example: failure root login attempts through ssh max threshold - `1` 
+* `-t` - threshold. Threshold exceeding value. Example: failure root login attempts through ssh max threshold - `1`
+* `-o` - drop timeout period
+* `-g` - group name - this name will be defined in DB as determinate rule
+* `-d` - delete IP from DB and Drop
 * `-e` - excludes ip list, separated with space (example: `127.0.0.1 1.1.1.1`)
+* `-s` - get statistics without IP droping. This argument can be used for command execution testing
 * `-p` - print database statistics
-* `-s` - get statistics without IP droping
-* `-d` - delete ip from DB
+* `-pr` - print last scan time/count from DB
+* `-pc` - prpint current configuration / script environments
 
 Works with multiple conditions:
 
