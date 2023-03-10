@@ -401,6 +401,9 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 # print(from_int)
                 found_count = lib.increment(found_count)
 
+                if IS_UPLOAD_ENABLED:
+                    lib.append_to_file(UPLOAD_FILE, ip)
+
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
                     _showstat(ip, count)
@@ -510,6 +513,8 @@ def main():
 
     if IS_UPLOAD_ENABLED:
         lib.check_dir(UPLOAD_DIR)
+        lib.check_file(UPLOAD_FILE)
+        lib.truncate_file(UPLOAD_FILE)
 
     # Dirty step
     # TODO: Need to make more beauty)
