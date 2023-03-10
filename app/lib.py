@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 from sys import platform
 import socket
+import getpass
 
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from . import var
@@ -79,6 +80,9 @@ def get_hostname():
     return socket.getfqdn()
     # print(os.uname().nodename)
     # print(socket.gethostname())
+
+def get_username():
+    return getpass.getuser()
 
 def check_dir(dest):
     is_exist = os.path.exists(dest)

@@ -61,6 +61,8 @@ UPLOAD_DIR_RELATIVE = CONFIG['MAIN']['UPLOAD_DIR']
 UPLOAD_DIR = os.path.join(BASE_DIR, UPLOAD_DIR_RELATIVE)
 IS_UPLOAD_ENABLED = CONFIG['MAIN'].getboolean('UPLOAD')
 HOSTNAME = CONFIG['MAIN']['HOSTNAME']
+USERNAME = CONFIG['MAIN']['USERNAME']
+
 # print(D_CONFIG_FILES)
 
 # Arguments parser
@@ -489,7 +491,9 @@ def print_config():
         f'ip2drop Version: {script_version}\n'
         f'Author: {author}\n'
         f'Site: {site}')
+    username = f'{USERNAME}'.format(USERNAME=lib.get_username())
     print("Hostname is {HOSTNAME}".format(HOSTNAME=lib.get_hostname()))
+    print(f'Username: {username}')
     exit(0)
 
 
