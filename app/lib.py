@@ -5,6 +5,7 @@ import logging
 import subprocess
 from pathlib import Path
 from sys import platform
+import socket
 
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from . import var
@@ -74,6 +75,10 @@ def append_id(filename):
     # msg_info(f'Result: {result}')
     return result
 
+def get_hostname():
+    return socket.getfqdn()
+    # print(os.uname().nodename)
+    # print(socket.gethostname())
 
 def check_dir(dest):
     is_exist = os.path.exists(dest)
@@ -88,6 +93,11 @@ def check_file(file):
     if not os.path.exists(file):
         open(file, 'w').close()
         msg_info(f'Log file: {file} created. Done.')
+
+
+def truncate_file(file):
+    with open(file, 'r+') as file:
+        file.truncate(0)
 
 
 def increment(number):

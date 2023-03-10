@@ -59,7 +59,8 @@ D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 # Uploading
 UPLOAD_DIR_RELATIVE = CONFIG['MAIN']['UPLOAD_DIR']
 UPLOAD_DIR = os.path.join(BASE_DIR, UPLOAD_DIR_RELATIVE)
-IS_UPLOAD_ENABLED = CONFIG['MAIN']['UPLOAD']
+IS_UPLOAD_ENABLED = CONFIG['MAIN'].getboolean('UPLOAD')
+HOSTNAME = CONFIG['MAIN']['HOSTNAME']
 # print(D_CONFIG_FILES)
 
 # Arguments parser
@@ -488,6 +489,7 @@ def print_config():
         f'ip2drop Version: {script_version}\n'
         f'Author: {author}\n'
         f'Site: {site}')
+    print("Hostname is {HOSTNAME}".format(HOSTNAME=lib.get_hostname()))
     exit(0)
 
 
