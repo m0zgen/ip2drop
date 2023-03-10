@@ -56,7 +56,10 @@ ARG_DEFAULT_MSG = var.ARG_DEFAULT_MSG
 # Conf.d loader
 D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 
-
+# Uploading
+UPLOAD_DIR_RELATIVE = CONFIG['MAIN']['UPLOAD_DIR']
+UPLOAD_DIR = os.path.join(BASE_DIR, UPLOAD_DIR_RELATIVE)
+IS_UPLOAD_ENABLED = CONFIG['MAIN']['UPLOAD']
 # print(D_CONFIG_FILES)
 
 # Arguments parser
@@ -493,6 +496,9 @@ def print_config():
 def main():
     args = arg_parse()
     check_app_versioning()
+
+    if IS_UPLOAD_ENABLED:
+        lib.check_dir(UPLOAD_DIR)
 
     # Dirty step
     # TODO: Need to make more beauty)
