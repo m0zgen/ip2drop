@@ -40,6 +40,7 @@ GROUP_NAME = CONFIG['DEFAULT']['GROUP_NAME']
 IP_EXCLUDES = CONFIG['MAIN']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['MAIN']['IPSET_NAME']
 IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
+EXPORT_TO_UPLOAD = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Datetime Format for Journalctl exported logs
@@ -375,7 +376,7 @@ def _review_exists(ip):
 
 
 # General
-def get_log(log, threshold, timeout, group_name, excludes, showstat):
+def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat):
     lib.msg_info(f'Info: Processing log: {log}')
     # TODO: add to routines table:
     found_count = 0
@@ -402,7 +403,8 @@ def get_log(log, threshold, timeout, group_name, excludes, showstat):
                 found_count = lib.increment(found_count)
 
                 if IS_UPLOAD_ENABLED:
-                    lib.append_to_file(UPLOAD_FILE, ip)
+                    if export_to_upload:
+                        lib.append_to_file(UPLOAD_FILE, ip)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
@@ -574,7 +576,7 @@ def main():
 
     # Main functions
     export_log(args.command, ctl_log)
-    get_log(ctl_log, args.threshold, args.timeout, args.group, args.excludes, args.stat)
+    get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat)
 
     # Each configs
     if D_CONFIG_COUNT > 0:
@@ -587,9 +589,10 @@ def main():
                 d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
                 d_export_log = os.path.join(var.EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
+                d_export_to_upload = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
                 lib.check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, args.excludes, args.stat)
+                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes, args.stat)
 
     add_routine_scan_time(lib.get_current_time())
 
