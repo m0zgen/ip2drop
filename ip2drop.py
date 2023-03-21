@@ -358,7 +358,7 @@ def _showstat(ip, count):
 def _review_exists(ip):
     creation_date = lib.get_current_time()
     current_timeout = get_timeout(ip)
-    current_count = get_drop_count(ip)
+    
     try:
         last_scan_date = get_last_scan_time()[1]
     except:
@@ -375,16 +375,19 @@ def _review_exists(ip):
     # check_start_end(current_count, time_difference, log)
 
     # TODO: Get out time
-    # current_time = lib.get_current_time()
+
     # current_delta = current_timeout - datetime.datetime.strptime(str(current_time),
     #                                                              DATETIME_DEFAULT_FORMAT)
 
-    # TODO: Add and update drop counts
-    lib.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}. Differences: {time_difference}')
+    current_delta = datetime.datetime.strptime(current_timeout, DATETIME_DEFAULT_FORMAT) - creation_date
 
-    # Update in DB
-    current_count = lib.increment(current_count)
-    update_drop_status(current_count, ip)
+    # TODO: Add and update drop counts
+    # lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
+    #     f'Current time: {creation_date} till to: {current_timeout}. Delta: {current_delta}')
+
+    if "-" in str(current_delta):
+        lib.msg_info(f'Timeout expired: {current_delta}')
+        return True
 
 
 # General
@@ -425,20 +428,27 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 else:
                     # TODO: Need to remove this section
                     # TODO: All IP need to append to ipset through text list
-                    print(f'\nAction: Drop: {ip} -> Threshold: {count}')
+                    
                     # Add DB Record time
                     # TODO: Need to Fix Drop time
                     creation_date = lib.get_current_time()
-                    # Ban
-                    if IPSET_ENABLED:
-                        add_ip_to_ipset(ip, timeout)
-                    else:
-                        add_ip_to_firewalld(ip)
 
                     # IN DEVELOP:
                     # Exists in Drop
                     if ip_exist(ip):
-                        _review_exists(ip)
+                        if _review_exists(ip):
+                            lib.msg_info(f'Need ban again {ip}')
+                            print(f'\nAction: Drop: {ip} -> Threshold: {count}')
+                            # Ban
+                            if IPSET_ENABLED:
+                                add_ip_to_ipset(ip, timeout)
+                            else:
+                                add_ip_to_firewalld(ip)
+
+                            # Update in DB
+                            current_count = get_drop_count(ip)
+                            current_count = lib.increment(current_count)
+                            update_drop_status(current_count, ip)
 
                     else:
                         # Drop / Re-Drop
@@ -449,6 +459,18 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         # Add to DB
                         add_drop_ip(ip, int_ip, 1, 1, undrop_date, drop_date, creation_date, group_name)
                         lib.log_info(f'Add drop IP to DB: {ip}')
+
+                        # Ban
+                        print(f'\nAction: Drop: {ip} -> Threshold: {count}')
+                        if IPSET_ENABLED:
+                            add_ip_to_ipset(ip, timeout)
+                        else:
+                            add_ip_to_firewalld(ip)
+
+                        # Update in DB
+                        current_count = get_drop_count(ip)
+                        current_count = lib.increment(current_count)
+                        update_drop_status(current_count, ip)
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
