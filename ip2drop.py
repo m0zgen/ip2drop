@@ -202,7 +202,7 @@ def update_unban_date(unban_date, ip):
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
     cur.execute("""UPDATE ip2drop SET TIMEOUT = :TIMEOUT WHERE IP =:IP """, {'TIMEOUT': unban_date, 'IP': ip})
     conn.commit()
-    print("Update Drop Status Successful")
+    print("Update Undrop Status Successful")
     conn.close()
 
 
