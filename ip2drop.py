@@ -404,7 +404,8 @@ def _drop(ip, timeout, count, again):
     if again:
         current_count = get_drop_count(ip)
         current_count = lib.increment(current_count)
-        update_drop_status(current_count, ip)
+
+    update_drop_status(1, ip)
 
 # General
 def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat):
