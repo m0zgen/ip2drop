@@ -196,6 +196,16 @@ def update_drop_status(status, ip):
     conn.close()
 
 
+def update_unban_date(unban_date, ip):
+    conn = sqlite3.connect(DROP_DB)
+    cur = conn.cursor()
+    # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
+    cur.execute("""UPDATE ip2drop SET TIMEOUT = :TIMEOUT WHERE IP =:IP """, {'TIMEOUT': unban_date, 'IP': ip})
+    conn.commit()
+    print("Update Drop Status Successful")
+    conn.close()
+
+
 # TODO: Checking already banned
 
 def delete_dropped_ip(ip):
@@ -404,7 +414,11 @@ def _drop(ip, timeout, count, again):
     if again:
         current_count = get_drop_count(ip)
         current_count = lib.increment(current_count)
+        update_drop_count(current_count, ip)
 
+    current_date = lib.get_current_time()
+    undrop_date = current_date + datetime.timedelta(seconds=timeout)
+    update_unban_date(undrop_date, ip)
     update_drop_status(1, ip)
 
 # General
