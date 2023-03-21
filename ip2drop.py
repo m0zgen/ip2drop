@@ -394,6 +394,8 @@ def _drop(ip, timeout, count):
     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
     # Ban
     if IPSET_ENABLED:
+        # TODO: Need update till to in DB!
+        lib.msg_info(f'Timeout: {timeout}')
         add_ip_to_ipset(ip, timeout)
     else:
         add_ip_to_firewalld(ip)
