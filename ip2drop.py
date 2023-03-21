@@ -486,6 +486,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
+                    # TODO: else decrease count
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
     if found_count == 0:
