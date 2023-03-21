@@ -390,6 +390,19 @@ def _review_exists(ip):
         return True
 
 
+def _drop(ip, timeout, count):
+    print(f'\nAction: Drop: {ip} -> Threshold: {count}')
+    # Ban
+    if IPSET_ENABLED:
+        add_ip_to_ipset(ip, timeout)
+    else:
+        add_ip_to_firewalld(ip)
+
+    # Update in DB
+    current_count = get_drop_count(ip)
+    current_count = lib.increment(current_count)
+    update_drop_status(current_count, ip)
+
 # General
 def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat):
     lib.msg_info(f'Info: Processing log: {log}')
@@ -438,17 +451,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     if ip_exist(ip):
                         if _review_exists(ip):
                             lib.msg_info(f'Need ban again {ip}')
-                            print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-                            # Ban
-                            if IPSET_ENABLED:
-                                add_ip_to_ipset(ip, timeout)
-                            else:
-                                add_ip_to_firewalld(ip)
-
-                            # Update in DB
-                            current_count = get_drop_count(ip)
-                            current_count = lib.increment(current_count)
-                            update_drop_status(current_count, ip)
+                            _drop(ip, timeout, count)
 
                     else:
                         # Drop / Re-Drop
@@ -461,16 +464,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         lib.log_info(f'Add drop IP to DB: {ip}')
 
                         # Ban
-                        print(f'\nAction: Drop: {ip} -> Threshold: {count}')
-                        if IPSET_ENABLED:
-                            add_ip_to_ipset(ip, timeout)
-                        else:
-                            add_ip_to_firewalld(ip)
-
-                        # Update in DB
-                        current_count = get_drop_count(ip)
-                        current_count = lib.increment(current_count)
-                        update_drop_status(current_count, ip)
+                        _drop(ip, timeout, count)
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
