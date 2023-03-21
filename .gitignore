@@ -15,6 +15,7 @@ config-prod.d
 
 # Files
 .prod
+.prod.d
 config-prod.ini
 helpers/ipset_status_done
 helpers/packages_status_done
