@@ -372,10 +372,15 @@ def _review_exists(ip):
     total_seconds = time_difference.total_seconds()
     # print(f'Timeout: {time_difference}')
     # print(f'Total seconds: {total_seconds}')
-    check_start_end(current_count, time_difference, log)
+    # check_start_end(current_count, time_difference, log)
+
+    # TODO: Get out time
+    # current_time = lib.get_current_time()
+    # current_delta = current_timeout - datetime.datetime.strptime(str(current_time),
+    #                                                              DATETIME_DEFAULT_FORMAT)
 
     # TODO: Add and update drop counts
-    lib.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}')
+    lib.msg_info(f'Info: IP exist in Drop DB: {ip} till to: {current_timeout}. Differences: {time_difference}')
 
     # Update in DB
     current_count = lib.increment(current_count)
