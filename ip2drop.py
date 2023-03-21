@@ -22,6 +22,7 @@ import json
 # Import app
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
+from app.var import SERVER_MODE
 from app import lib
 
 # Variables
@@ -55,7 +56,13 @@ DROP_DB_SCHEMA = var.DROP_DB_SCHEMA
 ARG_DEFAULT_MSG = var.ARG_DEFAULT_MSG
 
 # Conf.d loader
-D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
+if SERVER_MODE == 'Production':
+    D_CONFIG_FILES, D_CONFIG_COUNT = var.get_prod_config_files()
+else:
+    D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
+
+# get_prod_config_files
+
 # print(D_CONFIG_FILES)
 
 # Dynamics

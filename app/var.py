@@ -57,16 +57,17 @@ RELATIVE_BACKUP_DIR = "backup/"
 
 DB_DIR = os.path.join(BASE_DIR, RELATIVE_DB_DIR)
 SRC_DIR = os.path.join(BASE_DIR, RELATIVE_SRC_DIR)
-CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
 HELPERS_DIR = os.path.join(BASE_DIR, RELATIVE_HELPERS_DIR)
 EXPORTED_LOGS_DIR = os.path.join(BASE_DIR, RELATIVE_LOGS_DIR)
 BACKUP_DIR = os.path.join(BASE_DIR, RELATIVE_BACKUP_DIR)
 
 # Configs
 CONFIG = configparser.ConfigParser()
+CONF_DIR = os.path.join(BASE_DIR, RELATIVE_CONF_DIR)
 STAT_CONFIG = os.path.join(BASE_DIR, '.prod')
 DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
+PROD_CONF_DIR = os.path.join(BASE_DIR, 'prod.d')
 
 # DB
 DROP_DB_NAME = 'db.sqlite3'
@@ -104,6 +105,18 @@ def get_config_files():
         # check if current path is a file
         if os.path.isfile(os.path.join(CONF_DIR, path)):
             config_path = os.path.join(CONF_DIR, path)
+            d_config_files.append(config_path)
+            d_config_count += 1
+    return d_config_files, d_config_count
+    # print(D_CONFIG_FILES)
+
+def get_prod_config_files():
+    d_config_files = []
+    d_config_count = 0
+    for path in os.listdir(PROD_CONF_DIR):
+        # check if current path is a file
+        if os.path.isfile(os.path.join(PROD_CONF_DIR, path)):
+            config_path = os.path.join(PROD_CONF_DIR, path)
             d_config_files.append(config_path)
             d_config_count += 1
     return d_config_files, d_config_count
