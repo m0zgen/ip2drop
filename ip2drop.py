@@ -172,7 +172,7 @@ def update_drop_count(count, ip):
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
     cur.execute("""UPDATE ip2drop SET COUNT = :COUNT WHERE IP =:IP """, {'COUNT': count, 'IP': ip})
     conn.commit()
-    print("Update Status Successful")
+    print("Update Count Status Successful")
     conn.close()
 
 
@@ -192,7 +192,7 @@ def update_drop_status(status, ip):
     # cur.execute('''UPDATE ip2drop SET status = ? WHERE ip = ?''', (status, ip))
     cur.execute("""UPDATE ip2drop SET STATUS = :STATUS WHERE IP =:IP """, {'STATUS': status, 'IP': ip})
     conn.commit()
-    print("Update Status Successful")
+    print("Update Drop Status Successful")
     conn.close()
 
 
