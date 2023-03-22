@@ -465,7 +465,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 found_count = lib.increment(found_count)
 
             elif threshold < 0 and ip != IP_NONE and not showstat:
-                print('\r', str(ip), end = '')
+                print('\r', str(ip), end = ' ')
                 _drop_simple(ip, timeout)
                 found_count = lib.increment(found_count)
 
@@ -525,7 +525,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
         else:
             lib.msg_info(f'Log count: {log_len}')
     else:
-        lib.msg_info(f'\nInfo: Found count/Dropped IP: {found_count}')
+        lib.msg_info(f'Info: Found count/Dropped IP: {found_count}')
 
     # print(f'Found count: {found_count}')
 
