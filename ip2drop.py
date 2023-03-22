@@ -305,7 +305,8 @@ def remove_ip_from_firewall(ip):
 
 def add_ip_to_ipset(ip, timeout):
     timeout = str(timeout)
-    cmd = "ipset -! add " + IPSET_NAME + " " + ip + " timeout " + timeout
+    # -!
+    cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
     os.system(cmd)
 
 
