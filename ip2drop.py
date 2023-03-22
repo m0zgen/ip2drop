@@ -519,7 +519,11 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
     if found_count == 0:
-        lib.msg_info(f'Info: Thread does not found.')
+        if not showstat:
+            lib.msg_info(f'Info: Thread does not found.')
+            # TODO: need show counts for ip lists in stat
+        else:
+            lib.msg_info(f'Log count: {log_len}')
     else:
         lib.msg_info(f'\nInfo: Found count/Dropped IP: {found_count}')
 
