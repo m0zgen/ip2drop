@@ -299,7 +299,7 @@ def remove_ip_from_firewall(ip):
 
 def add_ip_to_ipset(ip, timeout):
     timeout = str(timeout)
-    cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
+    cmd = "ipset -! add " + IPSET_NAME + " " + ip + " timeout " + timeout
     os.system(cmd)
 
 
@@ -398,7 +398,22 @@ def _review_exists(ip):
     if "-" in str(current_delta):
         lib.msg_info(f'Timeout expired: {current_delta}')
         return True
+    else:
+        return False
 
+
+
+def _drop_simple(ip, timeout):
+
+    # lib.msg_info(f'Adding: {ip}')
+    # Ban
+    if IPSET_ENABLED:
+        # TODO: Need update till to in DB!
+        # lib.msg_info(f'Timeout: {timeout}')
+        add_ip_to_ipset(ip, timeout)
+    else:
+        add_ip_to_firewalld(ip)
+    
 
 def _drop(ip, timeout, count, again):
     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
@@ -421,27 +436,40 @@ def _drop(ip, timeout, count, again):
     update_unban_date(undrop_date, ip)
     update_drop_status(1, ip)
 
+
 # General
 def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat):
     lib.msg_info(f'Info: Processing log: {log}')
     # TODO: add to routines table:
     found_count = 0
 
+
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
         ips = Counter(extract_ip(line) for line in f)
         exclude_from_check = excludes.split(' ')
+        log_len = len(open(log).readlines())
+        log_size = os.path.getsize(log)
         # print(exclude_from_check)
+
+        # for k in range(log_len):
+        # # your stuff
+        #     print(end="\r|%-80s|" % ("="*int(80*k/(log_len-1))))
 
         for ip, count in ips.items():
             # print(ip, '->', count)
+            
             # Checking excludes list
             if ip in exclude_from_check:
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
+            elif threshold < 0 and ip != IP_NONE:
+                print('\r', str(ip), end = '')
+                _drop_simple(ip, timeout)
+
             # Checking threshold
-            elif count >= threshold and ip != IP_NONE:
+            elif count >= threshold and threshold > 0 and ip != IP_NONE:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
@@ -482,7 +510,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         lib.log_info(f'Add drop IP to DB: {ip}')
 
                         # Ban
-                        _drop(ip, timeout, count, False)
+                        # _drop(ip, timeout, count, False)
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
