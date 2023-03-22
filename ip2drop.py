@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # Author: Yevgeniy Goncharov, https://lab.sys-adm.in
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
-
+import difflib
 # Imports
 # ------------------------------------------------------------------------------------------------------/
 import os
 import re
+import shutil
 import sys
 import argparse
 import ipaddress
@@ -81,6 +82,7 @@ UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
 UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
 UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
+
 
 # Arguments parser
 # ------------------------------------------------------------------------------------------------------/
@@ -375,7 +377,7 @@ def _showstat(ip, count):
 def _review_exists(ip):
     creation_date = lib.get_current_time()
     current_timeout = get_timeout(ip)
-    
+
     try:
         last_scan_date = get_last_scan_time()[1]
     except:
@@ -409,9 +411,7 @@ def _review_exists(ip):
         return False
 
 
-
 def _drop_simple(ip, timeout):
-
     # lib.msg_info(f'Adding: {ip}')
     # Ban
     if IPSET_ENABLED:
@@ -420,7 +420,7 @@ def _drop_simple(ip, timeout):
         add_ip_to_ipset(ip, timeout)
     else:
         add_ip_to_firewalld(ip)
-    
+
 
 def _drop(ip, timeout, count, again):
     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
@@ -450,7 +450,6 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
     # TODO: add to routines table:
     found_count = 0
 
-
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
         ips = Counter(extract_ip(line) for line in f)
@@ -465,16 +464,37 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
         for ip, count in ips.items():
             # print(ip, '->', count)
-            
+
             # Checking excludes list
             if ip in exclude_from_check:
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
             elif threshold < 0 and ip != IP_NONE and not showstat:
-                print('\r', str(ip), end = ' ')
-                _drop_simple(ip, timeout)
-                found_count = lib.increment(found_count)
+
+                log_prev = log + "_prev"
+                if os.path.exists(log_prev):
+                    with open(log) as log_1:
+                        log_1_text = log_1.readlines()
+
+                    with open(log_prev) as log_2:
+                        log_2_text = log_2.readlines()
+
+                    # Find and print the diff:
+                    for line in difflib.unified_diff(
+                            log_1_text, log_2_text, fromfile=log,
+                            tofile=log_prev, lineterm=''):
+                        if "-" not in line:
+                            lib.msg_info(f'Diff file: {line}')
+                            _drop_simple(line, timeout)
+                            found_count = lib.increment(found_count)
+
+                else:
+                    _drop_simple(ip, timeout)
+                    found_count = lib.increment(found_count)
+                    print('\r', str(ip), end=' ')
+
+                shutil.copyfile(log, log_prev)
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
@@ -495,7 +515,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 else:
                     # TODO: Need to remove this section
                     # TODO: All IP need to append to ipset through text list
-                    
+
                     # Add DB Record time
                     # TODO: Need to Fix Drop time
                     creation_date = lib.get_current_time()
@@ -550,7 +570,6 @@ def get_app_json(file):
 
 
 def rebind_db(previous_db):
-
     lib.check_dir(var.BACKUP_DIR)
     postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
     new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
@@ -558,6 +577,7 @@ def rebind_db(previous_db):
     os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
     # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
     var.create_db_schema()
+
 
 def check_app_versioning():
     app_json_data = get_app_json(var.APP_JSON)
@@ -697,9 +717,11 @@ def main():
                 d_export_to_upload = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
                 lib.check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes, args.stat)
+                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes,
+                        args.stat)
 
     add_routine_scan_time(lib.get_current_time())
+
 
 # Init starter
 if __name__ == "__main__":
