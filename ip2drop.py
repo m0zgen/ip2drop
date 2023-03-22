@@ -399,7 +399,7 @@ def _review_exists(ip):
     current_delta = datetime.datetime.strptime(current_timeout, DATETIME_DEFAULT_FORMAT) - creation_date
 
     # TODO: Add and update drop counts
-    # lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
+    lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
     f'Current time: {creation_date} till to: {current_timeout}. Delta: {current_delta}')
 
     if "-" in str(current_delta):
