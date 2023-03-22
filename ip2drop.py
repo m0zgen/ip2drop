@@ -464,7 +464,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
-            elif threshold < 0 and ip != IP_NONE:
+            elif threshold < 0 and ip != IP_NONE and not showstat:
                 print('\r', str(ip), end = '')
                 _drop_simple(ip, timeout)
                 found_count = lib.increment(found_count)
