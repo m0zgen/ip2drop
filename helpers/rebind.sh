@@ -32,28 +32,26 @@ fi
 # 
 
 # Once operation
-setup_firewalld() {
-    if [ ! -e $IPSET_STATUS ]
-    then
-        firewall-cmd --permanent --new-ipset=${IPSET_NAME} --type=hash:ip --option=timeout=60 --option=maxelem=524288
-        firewall-cmd --permanent --add-source=ipset:${IPSET_NAME} --zone=drop
-        firewall-cmd --reload
+rebind_firewalld(){
+  firewall-cmd --permanent --delete-ipset=${IPSET_NAME}
+  firewall-cmd --permanent --new-ipset=${IPSET_NAME} --type=hash:ip --option=timeout=60  --option=maxelem=524288
+  firewall-cmd --permanent --add-source=ipset:${IPSET_NAME} --zone=drop
+  firewall-cmd --reload
 
-        local ipset_exists=`ipset -L`
+  local ipset_exists=`ipset -L`
 
-        if echo "$ipset_exists" | grep -iq "${IPSET_NAME}" ;
-        then
-            touch $IPSET_STATUS
-            exit 0
-        else
-            exit 1
-        fi
-        
-    fi
+  if echo "$ipset_exists" | grep -iq "${IPSET_NAME}" ;
+  then
+      touch $IPSET_STATUS
+      exit 0
+  else
+      exit 1
+  fi
+
 }
 
 # Setup ipset
-setup_firewalld
+rebind_firewalld
 
 STATUS=`iptables -L INPUT -n -v --line-numbers`
 
