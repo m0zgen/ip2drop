@@ -399,8 +399,8 @@ def _review_exists(ip):
     current_delta = datetime.datetime.strptime(current_timeout, DATETIME_DEFAULT_FORMAT) - creation_date
 
     # TODO: Add and update drop counts
-    lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
-    f'Current time: {creation_date} till to: {current_timeout}. Delta: {current_delta}')
+    # lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
+    # f'Current time: {creation_date} till to: {current_timeout}. Delta: {current_delta}')
 
     if "-" in str(current_delta):
         lib.msg_info(f'Timeout expired: {current_delta}')
@@ -503,9 +503,10 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # IN DEVELOP:
                     # Exists in Drop
                     if ip_exist(ip):
-                        if _review_exists(ip):
-                            lib.msg_info(f'Need ban again {ip}')
-                            _drop(ip, timeout, count, True)
+                        _drop(ip, timeout, count, True)
+                        # if _review_exists(ip):
+                        #     lib.msg_info(f'Need ban again {ip}')
+                        #     _drop(ip, timeout, count, True)
 
                     else:
                         # Drop / Re-Drop
