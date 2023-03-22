@@ -1,9 +1,9 @@
 {
     "ip2drop": {
         "author": "Yevgeniy Goncharov",
-        "current_database_version": 5.0,
+        "current_database_version": 5.1,
         "current_script_version": 5.0,
-        "previous_database_version": 5.0,
+        "previous_database_version": 5.1,
         "site": "https://lab.sys-adm.in"
     }
 }
