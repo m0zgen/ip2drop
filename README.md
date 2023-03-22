@@ -4,6 +4,12 @@ Find malicious IP addresses through executed command and send it's to firewalld 
 
 It is a interval-based solution, you can setup execute commands, threshold and running intervals.
 
+## Requirements
+* ipset
+* firewalld
+
+Tested and works on Debian 11+
+
 ## Parameters
 
 * `-c` - command execution. Bash or another command which `ip2drop` will run
