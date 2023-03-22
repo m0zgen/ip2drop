@@ -78,6 +78,10 @@ UPLOAD_BASE_FILE_NAME = CONFIG['MAIN']['UPLOAD_FILE']
 UPLOAD_FILE_NAME = f'{UPLOAD_PREFIX}_{UPLOAD_BASE_FILE_NAME}'
 UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 
+UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
+UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
+UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
+
 # Arguments parser
 # ------------------------------------------------------------------------------------------------------/
 def arg_parse():
@@ -90,6 +94,8 @@ def arg_parse():
     parser.add_argument('-d', '--delete', dest='delete', type=str, help='Delete IP from database')
     parser.add_argument('-e', '--excludes', dest='excludes', help="Excludes IP list with space separated",
                         default=IP_EXCLUDES)
+    parser.add_argument('-r', '--rebind', action='store_true', help='Rebind (reset) ipset and DB',
+                        default=False)
     parser.add_argument('-s', '--stat', action='store_true', help='Show status without drop',
                         default=False)
     parser.add_argument('-p', '--print', action='store_true', help='Print data from DB',
@@ -541,6 +547,16 @@ def get_app_json(file):
         return data
 
 
+def rebind_db(previous_db):
+
+    lib.check_dir(var.BACKUP_DIR)
+    postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
+    new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
+    print(new_name)
+    os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+    # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
+    var.create_db_schema()
+
 def check_app_versioning():
     app_json_data = get_app_json(var.APP_JSON)
 
@@ -550,15 +566,8 @@ def check_app_versioning():
         current_db = app_json_data['ip2drop']['current_database_version']
         if previous_db < current_db:
             lib.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
-            lib.check_dir(var.BACKUP_DIR)
-            postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
-            new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
-            print(new_name)
-            os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
-            # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
-            var.create_db_schema()
+            rebind_db(previous_db, current_db)
             app_json_data['ip2drop']['previous_database_version'] = current_db
-
             with open(var.APP_JSON, "w") as jsonFile:
                 json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)
     else:
@@ -586,6 +595,8 @@ def print_config():
     username = f'{USERNAME}'.format(USERNAME=lib.get_username())
     print("Hostname is {HOSTNAME}".format(HOSTNAME=lib.get_hostname()))
     print(f'Username: {username}')
+    lib.msg_info(
+        f'Sever: {UPLOAD_SERVER}, Protocol: {UPLOAD_PROTOCOL}, Upload enabled? {UPLOAD_TO_SERVER}')
     exit(0)
 
 
@@ -603,6 +614,16 @@ def main():
     # Dirty step
     # TODO: Need to make more beauty)
     # print(type(IPSET_NAME))
+    if args.rebind:
+        set_script = os.path.join(var.HELPERS_DIR, "rebind.sh")
+        res = subprocess.call([set_script, IPSET_NAME])
+        if res:
+            lib.msg_info("Info: Required components not installed in system. Please see messages above. Exit. Bye.")
+            exit(1)
+
+        rebind_db("rebind")
+        exit(0)
+
     if IPSET_ENABLED:
         set_script = os.path.join(var.HELPERS_DIR, "set-ipset.sh")
         # subprocess.run([set_script, IPSET_NAME])
@@ -677,7 +698,6 @@ def main():
                 get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes, args.stat)
 
     add_routine_scan_time(lib.get_current_time())
-
 
 # Init starter
 if __name__ == "__main__":
