@@ -467,6 +467,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
             elif threshold < 0 and ip != IP_NONE:
                 print('\r', str(ip), end = '')
                 _drop_simple(ip, timeout)
+                found_count = lib.increment(found_count)
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
