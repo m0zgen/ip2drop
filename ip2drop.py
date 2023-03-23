@@ -528,32 +528,62 @@ def whitespace_only(file):
         return True
 
 
-def drop_now(log, threshold, timeout, showstat):
+def drop_now(log, threshold, timeout, group_name, showstat):
     if threshold < 0 and not showstat:
 
         log_prev = log + "_prev"
         log_ip = []
         found_count = 0
-        log_compared = var.EXPORTED_LOGS_DIR + "/drop_compared.log"
+        log_compared = var.EXPORTED_LOGS_DIR + "/" + group_name + "_cmp.log"
         log_len = len(open(log).readlines())
+
+        a1 = []
+        a2 = []
 
         if os.path.exists(log_prev):
 
-            with open(log_prev) as log_1, open(log) as log_2:
-                log_1_text = log_1.readlines()
-                log_2_text = log_2.readlines()
+            cmp = filecmp.cmp(log, log_prev, shallow=False)
 
-            with open(log_compared, 'w') as outFile:
-                for line in log_2_text:
-                    if line not in log_1_text:
-                        outFile.write(line)
+            if not cmp:
+                lib.msg_info(f'Log files not seem equal...')
+                with open(log_prev) as log_1, open(log) as log_2:
+                    log_1_text = log_1.readlines()
+                    log_2_text = log_2.readlines()
 
-            if not whitespace_only(log_compared):
-                with open(log_compared, "r") as f:
+                with open(log_prev, "r") as f:
                     for line in f:
-                        ip = extract_ip(line)
-                        _drop_simple(ip, timeout)
-                        found_count = lib.increment(found_count)
+                        a1.append(line)
+
+                with open(log, "r") as f:
+                    for line in f:
+                        a2.append(line)
+
+                # Array method
+                # with open(log_compared, 'w') as outFile:
+                #     lib.msg_info(f'Comparsing...')
+                #     for line in a2:
+                #         print('\r', extract_ip(line), end=' ')
+                #         if line not in a1:
+                #             outFile.write(line)
+
+                # File method
+                with open(log_compared, 'w') as outFile:
+                    lib.msg_info(f'Comparsing...')
+                    for line in log_2_text:
+                        print('\r', extract_ip(line), end=' ')
+                        if line not in log_1_text:
+                            outFile.write(line)
+
+                if not whitespace_only(log_compared):
+                    with open(log_compared, "r") as f:
+                        for line in f:
+                            ip = extract_ip(line)
+                            _drop_simple(ip, timeout)
+                            found_count = lib.increment(found_count)
+
+            else:
+                lib.msg_info(f'Log files seem equal. Ok.')
+
 
         else:
             with open(log, "r") as f:
@@ -581,7 +611,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
     if drop_directly:
         # found_count = 
-        drop_now(log, threshold, timeout, showstat)
+        drop_now(log, threshold, timeout, group_name, showstat)
 
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
@@ -589,11 +619,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
         exclude_from_check = excludes.split(' ')
         log_len = len(open(log).readlines())
         log_size = os.path.getsize(log)
-        # print(exclude_from_check)
-
-        # for k in range(log_len):
-        # # your stuff
-        #     print(end="\r|%-80s|" % ("="*int(80*k/(log_len-1))))
+        
 
         for ip, count in ips.items():
             # print(ip, '->', count)
@@ -603,9 +629,9 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
-            elif threshold < 0 and ip != IP_NONE and not showstat:
-                if not drop_directly:
-                    drop_now(log, threshold, timeout, showstat)
+            # elif threshold < 0 and ip != IP_NONE and not showstat:
+            #     if not drop_directly:
+            #         drop_now(log, threshold, timeout, showstat)
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
