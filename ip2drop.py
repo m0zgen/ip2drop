@@ -213,7 +213,7 @@ def print_foundcount(found_count, showstat, log_len):
             lib.msg_info(f'Info: Thread does not found.')
             # TODO: need show counts for ip lists in stat
         else:
-            if log_len != 0
+            if log_len != 0:
                 lib.msg_info(f'Log count: {log_len}')
             else:
                 lib.msg_info(f'Info: Thread does not found.')
@@ -531,7 +531,7 @@ def whitespace_only(file):
         return True
 
 
-def drop_now(log, threshold, timeout, group_name, showstat):
+def drop_now(log, threshold, timeout, group_name, showstat, excludes):
     if threshold < 0 and not showstat:
 
         log_prev = log + "_prev"
@@ -539,9 +539,7 @@ def drop_now(log, threshold, timeout, group_name, showstat):
         found_count = 0
         log_compared = var.EXPORTED_LOGS_DIR + "/" + group_name + "_cmp.log"
         log_len = len(open(log).readlines())
-
-        a1 = []
-        a2 = []
+        exclude_from_check = excludes.split(' ')
 
         if os.path.exists(log_prev):
 
@@ -552,22 +550,6 @@ def drop_now(log, threshold, timeout, group_name, showstat):
                 with open(log_prev) as log_1, open(log) as log_2:
                     log_1_text = log_1.readlines()
                     log_2_text = log_2.readlines()
-
-                with open(log_prev, "r") as f:
-                    for line in f:
-                        a1.append(line)
-
-                with open(log, "r") as f:
-                    for line in f:
-                        a2.append(line)
-
-                # Array method
-                # with open(log_compared, 'w') as outFile:
-                #     lib.msg_info(f'Comparsing...')
-                #     for line in a2:
-                #         print('\r', extract_ip(line), end=' ')
-                #         if line not in a1:
-                #             outFile.write(line)
 
                 # File method
                 with open(log_compared, 'w') as outFile:
@@ -615,7 +597,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
     if drop_directly:
         # found_count = 
-        drop_now(log, threshold, timeout, group_name, showstat)
+        drop_now(log, threshold, timeout, group_name, showstat, excludes)
 
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
