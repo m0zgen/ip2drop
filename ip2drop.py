@@ -680,7 +680,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         lib.log_info(f'Add drop IP to DB: {ip}')
 
                         # Ban
-                        # _drop(ip, timeout, count, False)
+                        _drop(ip, timeout, count, False)
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
