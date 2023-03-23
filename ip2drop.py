@@ -374,7 +374,7 @@ def remove_ip_from_firewall(ip):
 def add_ip_to_ipset(ip, timeout):
     timeout = str(timeout)
     # -!
-    cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
+    cmd = "ipset -! add " + IPSET_NAME + " " + ip + " timeout " + timeout
     os.system(cmd)
 
 
@@ -518,6 +518,7 @@ def drop_now(log, threshold, timeout, showstat):
         found_count = 0
 
         if os.path.exists(log_prev):
+            
             with open(log) as log_1:
                 log_1_text = log_1.readlines()
 
@@ -529,10 +530,12 @@ def drop_now(log, threshold, timeout, showstat):
                     log_1_text, log_2_text, fromfile=log,
                     tofile=log_prev, lineterm=''):
 
+                lib.msg_info(line)
                 if "-" not in line:
-                    lib.msg_info(f'Diff file: {line}')
-                    _drop_simple(extract_ip(line), timeout)
-                    print('\r', extract_ip(line), end=' ')
+                    # lib.msg_info(f'Diff file: {line}')
+                    ip = extract_ip(line)
+                    _drop_simple(ip, timeout)
+                    print('\r', str(ip), end=' ')
                     found_count = lib.increment(found_count)
 
         else:
@@ -548,7 +551,8 @@ def drop_now(log, threshold, timeout, showstat):
                 # lib.msg_info(f'IP: {ip}')
 
         shutil.copyfile(log, log_prev)
-        return found_count
+        lib.msg_info(f'Found count in drop directly: {found_count}')
+        # return found_count
 
 
 # General
@@ -558,7 +562,8 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
     found_count = 0
 
     if drop_directly:
-        found_count = drop_now(log, threshold, timeout, showstat)
+        # found_count = 
+        drop_now(log, threshold, timeout, showstat)
 
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
