@@ -3,6 +3,7 @@
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
 import bisect
 import difflib
+import filecmp
 # Imports
 # ------------------------------------------------------------------------------------------------------/
 import os
@@ -204,6 +205,17 @@ def print_config():
     lib.msg_info(
         f'Sever: {UPLOAD_SERVER}, Protocol: {UPLOAD_PROTOCOL}, Upload enabled? {UPLOAD_TO_SERVER}')
     exit(0)
+
+
+def print_foundcount(found_count, showstat, log_len):
+    if found_count == 0:
+        if not showstat:
+            lib.msg_info(f'Info: Thread does not found.')
+            # TODO: need show counts for ip lists in stat
+        else:
+            lib.msg_info(f'Log count: {log_len}')
+    else:
+        lib.msg_info(f'Info: Found count/Dropped IP: {found_count}')
 
 
 # DB Operations
@@ -510,33 +522,38 @@ def _drop(ip, timeout, count, again):
     update_drop_status(1, ip)
 
 
+def whitespace_only(file):
+    content = open(file, 'r').read()
+    if re.search(r'^\s*$', content):
+        return True
+
+
 def drop_now(log, threshold, timeout, showstat):
     if threshold < 0 and not showstat:
 
         log_prev = log + "_prev"
         log_ip = []
         found_count = 0
+        log_compared = var.EXPORTED_LOGS_DIR + "/drop_compared.log"
+        log_len = len(open(log).readlines())
 
         if os.path.exists(log_prev):
-            
-            with open(log) as log_1:
-                log_1_text = log_1.readlines()
 
-            with open(log_prev) as log_2:
+            with open(log_prev) as log_1, open(log) as log_2:
+                log_1_text = log_1.readlines()
                 log_2_text = log_2.readlines()
 
-            # Find and print the diff:
-            for line in difflib.unified_diff(
-                    log_1_text, log_2_text, fromfile=log,
-                    tofile=log_prev, lineterm=''):
+            with open(log_compared, 'w') as outFile:
+                for line in log_2_text:
+                    if line not in log_1_text:
+                        outFile.write(line)
 
-                lib.msg_info(line)
-                if "-" not in line:
-                    # lib.msg_info(f'Diff file: {line}')
-                    ip = extract_ip(line)
-                    _drop_simple(ip, timeout)
-                    print('\r', str(ip), end=' ')
-                    found_count = lib.increment(found_count)
+            if not whitespace_only(log_compared):
+                with open(log_compared, "r") as f:
+                    for line in f:
+                        ip = extract_ip(line)
+                        _drop_simple(ip, timeout)
+                        found_count = lib.increment(found_count)
 
         else:
             with open(log, "r") as f:
@@ -551,8 +568,9 @@ def drop_now(log, threshold, timeout, showstat):
                 # lib.msg_info(f'IP: {ip}')
 
         shutil.copyfile(log, log_prev)
-        lib.msg_info(f'Found count in drop directly: {found_count}')
-        # return found_count
+        if found_count != 0:
+            lib.msg_info(f'Found count in drop directly: {found_count}')
+        print_foundcount(found_count,showstat, log_len)
 
 
 # General
@@ -639,14 +657,8 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # TODO: else decrease count
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
-    if found_count == 0:
-        if not showstat:
-            lib.msg_info(f'Info: Thread does not found.')
-            # TODO: need show counts for ip lists in stat
-        else:
-            lib.msg_info(f'Log count: {log_len}')
-    else:
-        lib.msg_info(f'Info: Found count/Dropped IP: {found_count}')
+    if not drop_directly:
+        print_foundcount(found_count, showstat, log_len)
 
     # print(f'Found count: {found_count}')
 
