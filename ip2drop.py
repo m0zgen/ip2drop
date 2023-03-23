@@ -213,9 +213,12 @@ def print_foundcount(found_count, showstat, log_len):
             lib.msg_info(f'Info: Thread does not found.')
             # TODO: need show counts for ip lists in stat
         else:
-            lib.msg_info(f'Log count: {log_len}')
+            if log_len != 0
+                lib.msg_info(f'Log count: {log_len}')
+            else:
+                lib.msg_info(f'Info: Thread does not found.')
     else:
-        lib.msg_info(f'Info: Found count/Dropped IP: {found_count}')
+        lib.msg_info(f'Info: Found count: {found_count}')
 
 
 # DB Operations
@@ -598,6 +601,7 @@ def drop_now(log, threshold, timeout, group_name, showstat):
                 # lib.msg_info(f'IP: {ip}')
 
         shutil.copyfile(log, log_prev)
+
         if found_count != 0:
             lib.msg_info(f'Found count in drop directly: {found_count}')
         print_foundcount(found_count,showstat, log_len)
@@ -676,7 +680,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         lib.log_info(f'Add drop IP to DB: {ip}')
 
                         # Ban
-                        # _drop(ip, timeout, count, False)
+                        _drop(ip, timeout, count, False)
                         # print(f'Action: Drop: {ip} -> Threshold: {count}')
                         # os.system("firewall-cmd --zone=drop --add-source=" + ip)
                     # found_count = increment(found_count)
