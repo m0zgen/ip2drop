@@ -308,7 +308,7 @@ def remove_ip_from_firewall(ip):
 def add_ip_to_ipset(ip, timeout):
     timeout = str(timeout)
     # -!
-    cmd = "ipset -! add " + IPSET_NAME + " " + ip + " timeout " + timeout
+    cmd = "ipset add " + IPSET_NAME + " " + ip + " timeout " + timeout
     os.system(cmd)
 
 
@@ -450,6 +450,41 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
     # TODO: add to routines table:
     found_count = 0
 
+    if threshold < 0 and not showstat:
+        
+        lib.msg_info(log)
+        log_prev = log + "_prev"
+
+        if os.path.exists(log_prev):
+            with open(log) as log_1:
+                log_1_text = log_1.readlines()
+
+            with open(log_prev) as log_2:
+                log_2_text = log_2.readlines()
+
+            # Find and print the diff:
+            for line in difflib.unified_diff(
+                    log_1_text, log_2_text, fromfile=log,
+                    tofile=log_prev, lineterm=''):
+                if "-" not in line:
+                    lib.msg_info(f'Diff file: {line}')
+                    _drop_simple(extract_ip(line), timeout)
+                    found_count = lib.increment(found_count)
+                    print('\r', line, end=' ')
+
+        else:
+            with open(log, "r") as f:
+                for line in f:
+                    print('\r', line, end=' ')
+                    _drop_simple(extract_ip(line), timeout)
+                    found_count = lib.increment(found_count)
+
+
+        shutil.copyfile(log, log_prev)
+
+        
+
+    # Process
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
         ips = Counter(extract_ip(line) for line in f)
@@ -470,31 +505,33 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
-            elif threshold < 0 and ip != IP_NONE and not showstat:
+            # elif threshold < 0 and ip != IP_NONE and not showstat:
 
-                log_prev = log + "_prev"
-                if os.path.exists(log_prev):
-                    with open(log) as log_1:
-                        log_1_text = log_1.readlines()
+            #     log_prev = log + "_prev"
+            #     if os.path.exists(log_prev):
+            #         with open(log) as log_1:
+            #             log_1_text = log_1.readlines()
 
-                    with open(log_prev) as log_2:
-                        log_2_text = log_2.readlines()
+            #         with open(log_prev) as log_2:
+            #             log_2_text = log_2.readlines()
 
-                    # Find and print the diff:
-                    for line in difflib.unified_diff(
-                            log_1_text, log_2_text, fromfile=log,
-                            tofile=log_prev, lineterm=''):
-                        if "-" not in line:
-                            lib.msg_info(f'Diff file: {line}')
-                            _drop_simple(line, timeout)
-                            found_count = lib.increment(found_count)
+            #         # Find and print the diff:
+            #         for line in difflib.unified_diff(
+            #                 log_1_text, log_2_text, fromfile=log,
+            #                 tofile=log_prev, lineterm=''):
+            #             lib.msg_info(f'AAA')
+            #             if "-" not in line:
+            #                 lib.msg_info(f'Diff file: {line}')
+            #                 _drop_simple(extract_ip(line), timeout)
+            #                 found_count = lib.increment(found_count)
+            #                 print('\r', line, end=' ')
 
-                else:
-                    _drop_simple(ip, timeout)
-                    found_count = lib.increment(found_count)
-                    print('\r', str(ip), end=' ')
+            #     else:
+            #         _drop_simple(ip, timeout)
+            #         found_count = lib.increment(found_count)
+            #         print('\r', str(ip), end=' ')
 
-                shutil.copyfile(log, log_prev)
+            #     shutil.copyfile(log, log_prev)
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
