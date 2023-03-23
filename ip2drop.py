@@ -580,33 +580,9 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
-            # elif threshold < 0 and ip != IP_NONE and not showstat:
-
-            #     log_prev = log + "_prev"
-            #     if os.path.exists(log_prev):
-            #         with open(log) as log_1:
-            #             log_1_text = log_1.readlines()
-
-            #         with open(log_prev) as log_2:
-            #             log_2_text = log_2.readlines()
-
-            #         # Find and print the diff:
-            #         for line in difflib.unified_diff(
-            #                 log_1_text, log_2_text, fromfile=log,
-            #                 tofile=log_prev, lineterm=''):
-            #             lib.msg_info(f'AAA')
-            #             if "-" not in line:
-            #                 lib.msg_info(f'Diff file: {line}')
-            #                 _drop_simple(extract_ip(line), timeout)
-            #                 found_count = lib.increment(found_count)
-            #                 print('\r', line, end=' ')
-
-            #     else:
-            #         _drop_simple(ip, timeout)
-            #         found_count = lib.increment(found_count)
-            #         print('\r', str(ip), end=' ')
-
-            #     shutil.copyfile(log, log_prev)
+            elif threshold < 0 and ip != IP_NONE and not showstat:
+                if not drop_directly:
+                    drop_now(log, threshold, timeout, showstat)
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
