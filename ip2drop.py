@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # Author: Yevgeniy Goncharov, https://lab.sys-adm.in
 # Find malicious IP addresses through executed command and send it's to firewalld drop zone for relaxing)
-
+import bisect
+import difflib
+import filecmp
 # Imports
 # ------------------------------------------------------------------------------------------------------/
 import os
 import re
+import shutil
 import sys
 import argparse
 import ipaddress
@@ -42,6 +45,7 @@ IP_EXCLUDES = CONFIG['MAIN']['IP_EXCLUDES']
 IPSET_NAME = CONFIG['MAIN']['IPSET_NAME']
 IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 EXPORT_TO_UPLOAD = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
+DROP_DIRECTLY = CONFIG['DEFAULT'].getboolean('DROP_DIRECTLY')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Datetime Format for Journalctl exported logs
@@ -82,6 +86,7 @@ UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
 UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
 UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
 
+
 # Arguments parser
 # ------------------------------------------------------------------------------------------------------/
 def arg_parse():
@@ -108,7 +113,7 @@ def arg_parse():
     return parser.parse_args()
 
 
-# Time operations
+#
 # ------------------------------------------------------------------------------------------------------/
 def check_start_end(current_timeout, time_difference, log):
     # Timing processes
@@ -136,6 +141,81 @@ def check_start_end(current_timeout, time_difference, log):
     # TODO: Get current time and expire time
 
     # print(f'Timeout {current_timeout}, Count: {current_count}')
+
+
+def get_app_json(file):
+    data = ""
+    try:
+        with open(file) as json_file:
+            data = json.load(json_file)
+            # print(data['ip2drop']['author'])
+            return data
+    except:
+        return data
+
+
+def rebind_db(previous_db):
+    lib.check_dir(var.BACKUP_DIR)
+    postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
+    new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
+    print(new_name)
+    os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+    # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
+    var.create_db_schema()
+
+
+def check_app_versioning():
+    app_json_data = get_app_json(var.APP_JSON)
+
+    if app_json_data != "":
+        # print(app_json_data)
+        previous_db = app_json_data['ip2drop']['previous_database_version']
+        current_db = app_json_data['ip2drop']['current_database_version']
+        if previous_db < current_db:
+            lib.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
+            rebind_db(previous_db, current_db)
+            app_json_data['ip2drop']['previous_database_version'] = current_db
+            with open(var.APP_JSON, "w") as jsonFile:
+                json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)
+    else:
+        print(f'App JSON not found')
+
+
+def print_config():
+    last_scan = get_last_scan_time()
+    lib.msg_info(
+        f'Loaded config: {var.LOADED_CONFIG}\n'
+        f'System log: {lib.SYSTEM_LOG}\n'
+        f'Server mode: {var.SERVER_MODE}\n'
+        f'Last scan: {last_scan}')
+
+    app_json_data = get_app_json(var.APP_JSON)
+    author = app_json_data['ip2drop']['author']
+    site = app_json_data['ip2drop']['site']
+    db_version = app_json_data['ip2drop']['current_database_version']
+    script_version = app_json_data['ip2drop']['current_script_version']
+    lib.msg_info(
+        f'DB Version: {db_version}\n'
+        f'ip2drop Version: {script_version}\n'
+        f'Author: {author}\n'
+        f'Site: {site}')
+    username = f'{USERNAME}'.format(USERNAME=lib.get_username())
+    print("Hostname is {HOSTNAME}".format(HOSTNAME=lib.get_hostname()))
+    print(f'Username: {username}')
+    lib.msg_info(
+        f'Sever: {UPLOAD_SERVER}, Protocol: {UPLOAD_PROTOCOL}, Upload enabled? {UPLOAD_TO_SERVER}')
+    exit(0)
+
+
+def print_foundcount(found_count, showstat, log_len):
+    if found_count == 0:
+        if not showstat:
+            lib.msg_info(f'Info: Thread does not found.')
+            # TODO: need show counts for ip lists in stat
+        else:
+            lib.msg_info(f'Log count: {log_len}')
+    else:
+        lib.msg_info(f'Info: Found count/Dropped IP: {found_count}')
 
 
 # DB Operations
@@ -375,7 +455,7 @@ def _showstat(ip, count):
 def _review_exists(ip):
     creation_date = lib.get_current_time()
     current_timeout = get_timeout(ip)
-    
+
     try:
         last_scan_date = get_last_scan_time()[1]
     except:
@@ -409,9 +489,7 @@ def _review_exists(ip):
         return False
 
 
-
 def _drop_simple(ip, timeout):
-
     # lib.msg_info(f'Adding: {ip}')
     # Ban
     if IPSET_ENABLED:
@@ -420,7 +498,7 @@ def _drop_simple(ip, timeout):
         add_ip_to_ipset(ip, timeout)
     else:
         add_ip_to_firewalld(ip)
-    
+
 
 def _drop(ip, timeout, count, again):
     print(f'\nAction: Drop: {ip} -> Threshold: {count}')
@@ -444,12 +522,96 @@ def _drop(ip, timeout, count, again):
     update_drop_status(1, ip)
 
 
+def whitespace_only(file):
+    content = open(file, 'r').read()
+    if re.search(r'^\s*$', content):
+        return True
+
+
+def drop_now(log, threshold, timeout, group_name, showstat):
+    if threshold < 0 and not showstat:
+
+        log_prev = log + "_prev"
+        log_ip = []
+        found_count = 0
+        log_compared = var.EXPORTED_LOGS_DIR + "/" + group_name + "_cmp.log"
+        log_len = len(open(log).readlines())
+
+        a1 = []
+        a2 = []
+
+        if os.path.exists(log_prev):
+
+            cmp = filecmp.cmp(log, log_prev, shallow=False)
+
+            if not cmp:
+                lib.msg_info(f'Log files not seem equal...')
+                with open(log_prev) as log_1, open(log) as log_2:
+                    log_1_text = log_1.readlines()
+                    log_2_text = log_2.readlines()
+
+                with open(log_prev, "r") as f:
+                    for line in f:
+                        a1.append(line)
+
+                with open(log, "r") as f:
+                    for line in f:
+                        a2.append(line)
+
+                # Array method
+                # with open(log_compared, 'w') as outFile:
+                #     lib.msg_info(f'Comparsing...')
+                #     for line in a2:
+                #         print('\r', extract_ip(line), end=' ')
+                #         if line not in a1:
+                #             outFile.write(line)
+
+                # File method
+                with open(log_compared, 'w') as outFile:
+                    lib.msg_info(f'Comparsing...')
+                    for line in log_2_text:
+                        print('\r', extract_ip(line), end=' ')
+                        if line not in log_1_text:
+                            outFile.write(line)
+
+                if not whitespace_only(log_compared):
+                    with open(log_compared, "r") as f:
+                        for line in f:
+                            ip = extract_ip(line)
+                            _drop_simple(ip, timeout)
+                            found_count = lib.increment(found_count)
+
+            else:
+                lib.msg_info(f'Log files seem equal. Ok.')
+
+
+        else:
+            with open(log, "r") as f:
+                for line in f:
+                    log_ip.append(line)
+
+            for line in log_ip:
+                ip = extract_ip(line)
+                _drop_simple(ip, timeout)
+                print('\r', str(ip), end=' ')
+                found_count = lib.increment(found_count)
+                # lib.msg_info(f'IP: {ip}')
+
+        shutil.copyfile(log, log_prev)
+        if found_count != 0:
+            lib.msg_info(f'Found count in drop directly: {found_count}')
+        print_foundcount(found_count,showstat, log_len)
+
+
 # General
-def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat):
+def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat, drop_directly):
     lib.msg_info(f'Info: Processing log: {log}')
     # TODO: add to routines table:
     found_count = 0
 
+    if drop_directly:
+        # found_count = 
+        drop_now(log, threshold, timeout, group_name, showstat)
 
     with open(log, "r") as f:
         # Count IPv4 if IPv6 - return None
@@ -457,24 +619,19 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
         exclude_from_check = excludes.split(' ')
         log_len = len(open(log).readlines())
         log_size = os.path.getsize(log)
-        # print(exclude_from_check)
-
-        # for k in range(log_len):
-        # # your stuff
-        #     print(end="\r|%-80s|" % ("="*int(80*k/(log_len-1))))
+        
 
         for ip, count in ips.items():
             # print(ip, '->', count)
-            
+
             # Checking excludes list
             if ip in exclude_from_check:
                 lib.msg_info(f'Info: Found Ignored IP: {ip} with count: {count}')
                 found_count = lib.increment(found_count)
 
-            elif threshold < 0 and ip != IP_NONE and not showstat:
-                print('\r', str(ip), end = ' ')
-                _drop_simple(ip, timeout)
-                found_count = lib.increment(found_count)
+            # elif threshold < 0 and ip != IP_NONE and not showstat:
+            #     if not drop_directly:
+            #         drop_now(log, threshold, timeout, showstat)
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
@@ -495,7 +652,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 else:
                     # TODO: Need to remove this section
                     # TODO: All IP need to append to ipset through text list
-                    
+
                     # Add DB Record time
                     # TODO: Need to Fix Drop time
                     creation_date = lib.get_current_time()
@@ -526,80 +683,10 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # TODO: else decrease count
             # else:
             #     print(f'Attack with threshold ({IP_THRESHOLD}) conditions  not detected.')
-    if found_count == 0:
-        if not showstat:
-            lib.msg_info(f'Info: Thread does not found.')
-            # TODO: need show counts for ip lists in stat
-        else:
-            lib.msg_info(f'Log count: {log_len}')
-    else:
-        lib.msg_info(f'Info: Found count/Dropped IP: {found_count}')
+    if not drop_directly:
+        print_foundcount(found_count, showstat, log_len)
 
     # print(f'Found count: {found_count}')
-
-
-def get_app_json(file):
-    data = ""
-    try:
-        with open(file) as json_file:
-            data = json.load(json_file)
-            # print(data['ip2drop']['author'])
-            return data
-    except:
-        return data
-
-
-def rebind_db(previous_db):
-
-    lib.check_dir(var.BACKUP_DIR)
-    postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
-    new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
-    print(new_name)
-    os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
-    # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
-    var.create_db_schema()
-
-def check_app_versioning():
-    app_json_data = get_app_json(var.APP_JSON)
-
-    if app_json_data != "":
-        # print(app_json_data)
-        previous_db = app_json_data['ip2drop']['previous_database_version']
-        current_db = app_json_data['ip2drop']['current_database_version']
-        if previous_db < current_db:
-            lib.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
-            rebind_db(previous_db, current_db)
-            app_json_data['ip2drop']['previous_database_version'] = current_db
-            with open(var.APP_JSON, "w") as jsonFile:
-                json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)
-    else:
-        print(f'App JSON not found')
-
-
-def print_config():
-    last_scan = get_last_scan_time()
-    lib.msg_info(
-        f'Loaded config: {var.LOADED_CONFIG}\n'
-        f'System log: {lib.SYSTEM_LOG}\n'
-        f'Server mode: {var.SERVER_MODE}\n'
-        f'Last scan: {last_scan}')
-
-    app_json_data = get_app_json(var.APP_JSON)
-    author = app_json_data['ip2drop']['author']
-    site = app_json_data['ip2drop']['site']
-    db_version = app_json_data['ip2drop']['current_database_version']
-    script_version = app_json_data['ip2drop']['current_script_version']
-    lib.msg_info(
-        f'DB Version: {db_version}\n'
-        f'ip2drop Version: {script_version}\n'
-        f'Author: {author}\n'
-        f'Site: {site}')
-    username = f'{USERNAME}'.format(USERNAME=lib.get_username())
-    print("Hostname is {HOSTNAME}".format(HOSTNAME=lib.get_hostname()))
-    print(f'Username: {username}')
-    lib.msg_info(
-        f'Sever: {UPLOAD_SERVER}, Protocol: {UPLOAD_PROTOCOL}, Upload enabled? {UPLOAD_TO_SERVER}')
-    exit(0)
 
 
 # Main
@@ -681,7 +768,8 @@ def main():
 
     # Main functions
     export_log(args.command, ctl_log)
-    get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat)
+    get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
+            DROP_DIRECTLY)
 
     # Each configs
     if D_CONFIG_COUNT > 0:
@@ -695,11 +783,14 @@ def main():
                 d_export_log = os.path.join(var.EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
                 d_export_to_upload = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
+                d_drop_directly = CONFIG['DEFAULT'].getboolean('DROP_DIRECTLY')
                 lib.check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes, args.stat)
+                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes,
+                        args.stat, d_drop_directly)
 
     add_routine_scan_time(lib.get_current_time())
+
 
 # Init starter
 if __name__ == "__main__":
