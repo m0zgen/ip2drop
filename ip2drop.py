@@ -391,6 +391,7 @@ def add_ip_to_ipset(ip, timeout):
     # -!
     cmd = "ipset -! add " + IPSET_NAME + " " + ip + " timeout " + timeout
     os.system(cmd)
+    lib.log_info(f'Added to ipset: {ip}')
 
 
 def remove_ip_from_ipset(ip):
