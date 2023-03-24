@@ -1,0 +1,10 @@
+/var/log/ip2drop.log {
+        rotate 2
+        weekly
+        minsize 1M
+        missingok
+        create 640 root adm
+        notifempty
+        compress
+        delaycompress
+}
