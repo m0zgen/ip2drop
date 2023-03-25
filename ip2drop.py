@@ -4,6 +4,7 @@
 import bisect
 import difflib
 import filecmp
+import requests
 # Imports
 # ------------------------------------------------------------------------------------------------------/
 import os
@@ -591,6 +592,31 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
         print_foundcount(found_count,showstat, log_len)
 
 
+def generate_upload_file(ip, export_to_upload):
+    if IS_UPLOAD_ENABLED:
+        if export_to_upload:
+            lib.append_to_file(UPLOAD_FILE, ip)
+
+
+def post_upload_file():
+    if IS_UPLOAD_ENABLED:
+        if lib.check_http_200(UPLOAD_SERVER):
+            lib.msg_info(f'Upload server available: {UPLOAD_SERVER}')
+            if os.path.exists(UPLOAD_FILE):
+                access_token = HOSTNAME + "-token"
+                hdr = {"Authorization": "Bearer %s" % access_token}
+                with open(UPLOAD_FILE, "rb") as fobj:
+                    file_obj = fobj.read()
+                    file_basename = os.path.basename(UPLOAD_FILE)
+                    file_to_upload = {"file": (str(file_basename), file_obj)}
+                    finfo = {"fullPath": UPLOAD_FILE}
+                    upload_response = requests.post(UPLOAD_SERVER, headers=hdr, files=file_to_upload, data=finfo)
+                    fobj.close()
+                # print("Status Code ", upload_response.status_code)
+                # print("JSON Response ", upload_response.json())
+                return upload_response
+
+
 # General
 def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, showstat, drop_directly):
     lib.msg_info(f'Info: Processing log: {log}')
@@ -629,11 +655,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 # print(from_int)
                 found_count = lib.increment(found_count)
 
-                if IS_UPLOAD_ENABLED:
-                    if export_to_upload:
-                        lib.append_to_file(UPLOAD_FILE, ip)
-                        if lib.check_http_200(UPLOAD_SERVER):
-                            lib.msg_info(f'Upload server available: {UPLOAD_SERVER}')
+                generate_upload_file(ip, export_to_upload)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
@@ -780,6 +802,8 @@ def main():
                         args.stat, d_drop_directly)
 
     add_routine_scan_time(lib.get_current_time())
+    lib.msg_info(f'Upload file response:')
+    print(post_upload_file())
 
 
 # Init starter
