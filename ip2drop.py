@@ -631,6 +631,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 if IS_UPLOAD_ENABLED:
                     if export_to_upload:
                         lib.append_to_file(UPLOAD_FILE, ip)
+                        # lib.check_http_200()
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:

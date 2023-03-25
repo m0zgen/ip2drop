@@ -8,6 +8,8 @@ from sys import platform
 import socket
 import getpass
 
+import requests
+
 sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from . import var
 
@@ -106,6 +108,14 @@ def append_to_file(file, line):
     with open(file, 'a') as file:
         file.write(f'{line}\n')
         # file.close()
+
+
+def check_http_200(url):
+    resp = requests.get(url)
+    if resp.status_code == 200:
+        return True
+    else:
+        return False
 
 
 def truncate_file(file):
