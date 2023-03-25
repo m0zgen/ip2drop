@@ -101,13 +101,14 @@ Delete IP from DB:
 * `ipset`
 * `python3-pip`
 * `python3-psutil`
+* `python3-requests`
 * `firewalld`
 
 Tested and works on Debian 11+
 
 Installation:
 ```shell
-apt -y install python3 python3-pip python3-psutil ipset
+apt -y install python3 python3-pip python3-psutil python3-requests firewalld ipset
 ```
 
 or just run `check-modules.sh` from `helpers` catalog.

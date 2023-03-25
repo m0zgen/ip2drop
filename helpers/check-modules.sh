@@ -53,6 +53,7 @@ packages=(
     python3
     python3-pip
     python3-psutil
+    python3-requests
 )
 
 # Checks
