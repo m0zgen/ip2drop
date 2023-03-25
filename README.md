@@ -44,13 +44,12 @@ This is real-time firewalld action (not `--permanent`) for reset blocking IPs yo
 
 ## Config Options
 
-* `IP_TIMEOUT` = `86400` (drop time in seconds)
-* `IP_THRESHOLD` = `1` (number of repetitions of the address in the log)
-* `EXPORT_COMMAND` = `/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'
-EXPORT_LOG = ip2drop.log` (log exporter)
-* `GROUP_NAME` = `default-ssh` (log file name, stored in `logs` catalog)
-* `EXPORT_TO_UPLOAD` = `Yes` (collect founded logs to export list for upload on remote server)
-* `DROP_DIRECTLY` = `No` (drop immediately, without DB storind)
+* `IP_TIMEOUT` - drop time in seconds
+* `IP_THRESHOLD` - number of repetitions of the address in the log
+* `EXPORT_COMMAND` - log exporter
+* `GROUP_NAME` - log file name, stored in `logs` catalog
+* `EXPORT_TO_UPLOAD` - collect founded logs to export list for upload on remote server
+* `DROP_DIRECTLY` -drop immediately, without DB storing
 
 ## Command Examples
 
