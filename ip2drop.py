@@ -47,6 +47,7 @@ IPSET_NAME = CONFIG['MAIN']['IPSET_NAME']
 IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 EXPORT_TO_UPLOAD = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
 DROP_DIRECTLY = CONFIG['DEFAULT'].getboolean('DROP_DIRECTLY')
+SKIP_DEFAULT_RULE = CONFIG['MAIN'].getboolean('SKIP_DEFAULT_RULE')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Datetime Format for Journalctl exported logs
@@ -599,7 +600,7 @@ def generate_upload_file(ip, export_to_upload):
 
 
 def post_upload_file():
-    if IS_UPLOAD_ENABLED:
+    if UPLOAD_TO_SERVER:
         if lib.check_http_200(UPLOAD_SERVER):
             lib.msg_info(f'Upload server available: {UPLOAD_SERVER}')
             if os.path.exists(UPLOAD_FILE):
@@ -779,9 +780,10 @@ def main():
     lib.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
     # Main functions
-    export_log(args.command, ctl_log)
-    get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
-            DROP_DIRECTLY)
+    if not SKIP_DEFAULT_RULE:
+        export_log(args.command, ctl_log)
+        get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
+                DROP_DIRECTLY)
 
     # Each configs
     if D_CONFIG_COUNT > 0:
