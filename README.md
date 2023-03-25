@@ -4,13 +4,7 @@ Find malicious IP addresses through executed command and send it's to firewalld 
 
 It is a interval-based solution, you can setup execute commands, threshold and running intervals.
 
-## Requirements
-* ipset
-* firewalld
-
-Tested and works on Debian 11+
-
-## Parameters
+## Arguments
 
 * `-c` - command execution. Bash or another command which `ip2drop` will run
 * `-l` - log file name. `ip2drop` will export IP addresses from this log file and this IP on threshold exceeding
@@ -19,6 +13,7 @@ Tested and works on Debian 11+
 * `-g` - group name - this name will be defined in DB as determinate rule
 * `-d` - delete IP from DB and Drop
 * `-e` - excludes ip list, separated with space (example: `127.0.0.1 1.1.1.1`)
+* `-r` - rebind - reset ipset and DB (with DB backup)
 * `-s` - get statistics without IP droping. This argument can be used for command execution testing
 * `-p` - print database statistics
 * `-pr` - print last scan time/count from DB
@@ -26,15 +21,12 @@ Tested and works on Debian 11+
 
 Works with multiple conditions:
 
-* Run exporter for exporting log file from `command` argument 
-* Check exported log 
-* If threshold value will exceed this IP will send to firewalld `drop` zone
-
-## Example
-
 ```
 ./ip2drop.py -l ssh-ctl.log -t 1 -c "journalctl -u ssh -S today --no-tail | grep 'Connection closed by authenticating user root'"
 ```
+
+If threshold value (`-t 1`) will exceed, founded IP from log (`-l ssh-ctl.log`) will send to firewalld `drop` zone. 
+If you want to review statistics for, jus add `-s` argument to command.
 
 Result:
 
@@ -50,7 +42,19 @@ success
 
 This is real-time firewalld action (not `--permanent`) for reset blocking IPs you can reload firewalld.
 
-Set custom threshold fro drop action:
+## Config Options
+
+* `IP_TIMEOUT` = `86400` (drop time in seconds)
+* `IP_THRESHOLD` = `1` (number of repetitions of the address in the log)
+* `EXPORT_COMMAND` = `/usr/bin/journalctl -u ssh -S today --no-tail | grep 'Failed password'
+EXPORT_LOG = ip2drop.log` (log exporter)
+* `GROUP_NAME` = `default-ssh` (log file name, stored in `logs` catalog)
+* `EXPORT_TO_UPLOAD` = `Yes` (collect founded logs to export list for upload on remote server)
+* `DROP_DIRECTLY` = `No` (drop immediately, without DB storind)
+
+## Command Examples
+
+Set custom threshold for drop action:
 ```
 ./ip2drop.py -t 1
 ```
@@ -58,6 +62,11 @@ Set custom threshold fro drop action:
 Show DB entries:
 ```
 ./ip2drop.py -p
+```
+
+ip2drop info:
+```
+./ip2drop.py -pc
 ```
 
 Get statistic:
@@ -94,6 +103,8 @@ Delete IP from DB:
 * `python3-pip`
 * `python3-psutil`
 * `firewalld`
+
+Tested and works on Debian 11+
 
 Installation:
 ```shell
