@@ -73,7 +73,7 @@ else:
 HOSTNAME = CONFIG['MAIN']['HOSTNAME']
 USERNAME = CONFIG['MAIN']['USERNAME']
 
-# Uploading
+# Uploading to local folder
 IS_UPLOAD_ENABLED = CONFIG['MAIN'].getboolean('UPLOAD')
 UPLOAD_PREFIX = f'{HOSTNAME}'.format(HOSTNAME=lib.get_hostname())
 UPLOAD_DIR_RELATIVE = CONFIG['MAIN']['UPLOAD_DIR']
@@ -82,6 +82,7 @@ UPLOAD_BASE_FILE_NAME = CONFIG['MAIN']['UPLOAD_FILE']
 UPLOAD_FILE_NAME = f'{UPLOAD_PREFIX}_{UPLOAD_BASE_FILE_NAME}'
 UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 
+# Upload remote
 UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
 UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
 UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
@@ -631,7 +632,8 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 if IS_UPLOAD_ENABLED:
                     if export_to_upload:
                         lib.append_to_file(UPLOAD_FILE, ip)
-                        # lib.check_http_200()
+                        if lib.check_http_200(UPLOAD_SERVER):
+                            lib.msg_info(f'Upload server available: {UPLOAD_SERVER}')
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
