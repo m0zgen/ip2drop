@@ -115,6 +115,8 @@ def arg_parse():
                         default=False)
     parser.add_argument('-id', '--includedefault', action='store_true', help='Include default rule',
                         default=False)
+    parser.add_argument('-sc', '--scipconfd', action='store_true', help='Skip conf.d from processing',
+                        default=False)
     # args = parser.parse_args()
     return parser.parse_args()
 
@@ -788,7 +790,7 @@ def main():
                 DROP_DIRECTLY)
 
     # Each configs
-    if D_CONFIG_COUNT > 0 and not SKIP_CONFD:
+    if D_CONFIG_COUNT > 0 and not SKIP_CONFD and not args.scipconfd:
         for D_CONFIG in D_CONFIG_FILES:
             CONFIG.read(D_CONFIG)
             d_enabled = CONFIG['DEFAULT'].getboolean('ENABLED')
