@@ -782,11 +782,7 @@ def main():
     lib.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
     # Main functions
-    if not SKIP_DEFAULT_RULE:
-        export_log(args.command, ctl_log)
-        get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
-                DROP_DIRECTLY)
-    elif args.includedefault:
+    if not SKIP_DEFAULT_RULE or args.includedefault:
         export_log(args.command, ctl_log)
         get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
                 DROP_DIRECTLY)
