@@ -112,6 +112,8 @@ def arg_parse():
                         default=False)
     parser.add_argument('-pc', '--printconfig', action='store_true', help='Print configs data',
                         default=False)
+    parser.add_argument('-id', '--includedefault', action='store_true', help='Include default rule',
+                        default=False)
     # args = parser.parse_args()
     return parser.parse_args()
 
@@ -781,6 +783,10 @@ def main():
 
     # Main functions
     if not SKIP_DEFAULT_RULE:
+        export_log(args.command, ctl_log)
+        get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
+                DROP_DIRECTLY)
+    elif args.includedefault:
         export_log(args.command, ctl_log)
         get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
                 DROP_DIRECTLY)
