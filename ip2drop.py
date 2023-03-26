@@ -47,6 +47,8 @@ IPSET_NAME = CONFIG['MAIN']['IPSET_NAME']
 IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 EXPORT_TO_UPLOAD = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
 DROP_DIRECTLY = CONFIG['DEFAULT'].getboolean('DROP_DIRECTLY')
+SKIP_DEFAULT_RULE = CONFIG['MAIN'].getboolean('SKIP_DEFAULT_RULE')
+SKIP_CONFD = CONFIG['MAIN'].getboolean('SKIP_CONFD')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Datetime Format for Journalctl exported logs
@@ -110,6 +112,10 @@ def arg_parse():
     parser.add_argument('-pr', '--printroutines', action='store_true', help='Print routines from DB',
                         default=False)
     parser.add_argument('-pc', '--printconfig', action='store_true', help='Print configs data',
+                        default=False)
+    parser.add_argument('-id', '--includedefault', action='store_true', help='Include default rule',
+                        default=False)
+    parser.add_argument('-sc', '--scipconfd', action='store_true', help='Skip conf.d from processing',
                         default=False)
     # args = parser.parse_args()
     return parser.parse_args()
@@ -589,7 +595,7 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
 
         if found_count != 0:
             lib.msg_info(f'Found count in drop directly: {found_count}')
-        print_foundcount(found_count,showstat, log_len)
+        print_foundcount(found_count, showstat, log_len)
 
 
 def generate_upload_file(ip, export_to_upload):
@@ -599,7 +605,7 @@ def generate_upload_file(ip, export_to_upload):
 
 
 def post_upload_file():
-    if IS_UPLOAD_ENABLED:
+    if UPLOAD_TO_SERVER:
         if lib.check_http_200(UPLOAD_SERVER):
             lib.msg_info(f'Upload server available: {UPLOAD_SERVER}')
             if os.path.exists(UPLOAD_FILE):
@@ -633,7 +639,6 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
         exclude_from_check = excludes.split(' ')
         log_len = len(open(log).readlines())
         log_size = os.path.getsize(log)
-        
 
         for ip, count in ips.items():
             # print(ip, '->', count)
@@ -779,12 +784,13 @@ def main():
     lib.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
 
     # Main functions
-    export_log(args.command, ctl_log)
-    get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
-            DROP_DIRECTLY)
+    if not SKIP_DEFAULT_RULE or args.includedefault:
+        export_log(args.command, ctl_log)
+        get_log(ctl_log, args.threshold, args.timeout, args.group, EXPORT_TO_UPLOAD, args.excludes, args.stat,
+                DROP_DIRECTLY)
 
     # Each configs
-    if D_CONFIG_COUNT > 0:
+    if D_CONFIG_COUNT > 0 and not SKIP_CONFD and not args.scipconfd:
         for D_CONFIG in D_CONFIG_FILES:
             CONFIG.read(D_CONFIG)
             d_enabled = CONFIG['DEFAULT'].getboolean('ENABLED')

@@ -49,7 +49,8 @@ This is real-time firewalld action (not `--permanent`) for reset blocking IPs yo
 * `EXPORT_COMMAND` - log exporter
 * `GROUP_NAME` - log file name, stored in `logs` catalog
 * `EXPORT_TO_UPLOAD` - collect founded logs to export list for upload on remote server
-* `DROP_DIRECTLY` -drop immediately, without DB storing
+* `DROP_DIRECTLY` - drop immediately, without DB storing
+* `SKIP_DEFAULT_RULE` - Skip `[DEFAULT]` rule from `config.ini`
 
 ## Command Examples
 
