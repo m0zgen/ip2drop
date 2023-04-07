@@ -120,7 +120,10 @@ def check_http_200(url):
             # print("False")
             return False
     except requests.exceptions.InvalidSchema:
-        print("Host not available: ", url)
+        print("Host not available <InvalidSchema>: ", url)
+        return False
+    except requests.exceptions.ConnectionError:
+        print("Host not available <ConnectionError>: ", url)
         return False
 
 
