@@ -48,6 +48,7 @@ IPSET_ENABLED = CONFIG['MAIN'].getboolean('IPSET_ENABLED')
 EXPORT_TO_UPLOAD = CONFIG['DEFAULT'].getboolean('EXPORT_TO_UPLOAD')
 DROP_DIRECTLY = CONFIG['DEFAULT'].getboolean('DROP_DIRECTLY')
 SKIP_DEFAULT_RULE = CONFIG['MAIN'].getboolean('SKIP_DEFAULT_RULE')
+SKIP_LOG_PREV = CONFIG['DEFAULT'].getboolean('SKIP_LOG_PREV')
 SKIP_CONFD = CONFIG['MAIN'].getboolean('SKIP_CONFD')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
@@ -540,6 +541,22 @@ def whitespace_only(file):
         return True
 
 
+def iterate_and_drop(file, timeout, simple_drop, message):
+    found_count = 0
+    for line in file:
+        ip = extract_ip(line)
+        found_count = lib.increment(found_count)
+
+        if simple_drop:
+            _drop_simple(ip, timeout)
+
+        if message:
+            print('\r', str(ip), end=' ')
+        # lib.msg_info(f'IP: {ip}')
+
+    return found_count
+
+
 def drop_now(log, threshold, timeout, group_name, showstat, excludes):
     if threshold < 0 and not showstat:
 
@@ -551,7 +568,7 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
         exclude_from_check = excludes.split(' ')
 
         if os.path.exists(log_prev):
-
+            # Compare files
             cmp = filecmp.cmp(log, log_prev, shallow=False)
 
             if not cmp:
@@ -560,9 +577,9 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
                     log_1_text = log_1.readlines()
                     log_2_text = log_2.readlines()
 
-                # File method
+                # Comparing file method
                 with open(log_compared, 'w') as outFile:
-                    lib.msg_info(f'Comparsing...')
+                    lib.msg_info(f'Comparing...')
                     for line in log_2_text:
                         print('\r', extract_ip(line), end=' ')
                         if line not in log_1_text:
@@ -570,26 +587,28 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
 
                 if not whitespace_only(log_compared):
                     with open(log_compared, "r") as f:
-                        for line in f:
-                            ip = extract_ip(line)
-                            _drop_simple(ip, timeout)
-                            found_count = lib.increment(found_count)
+                        iterate_and_drop(f, timeout, True, False)
+                        # for line in f:
+                        #     ip = extract_ip(line)
+                        #     _drop_simple(ip, timeout)
+                        #     found_count = lib.increment(found_count)
 
             else:
                 lib.msg_info(f'Log files seem equal. Ok.')
-
 
         else:
             with open(log, "r") as f:
                 for line in f:
                     log_ip.append(line)
 
-            for line in log_ip:
-                ip = extract_ip(line)
-                _drop_simple(ip, timeout)
-                print('\r', str(ip), end=' ')
-                found_count = lib.increment(found_count)
-                # lib.msg_info(f'IP: {ip}')
+            iterate_and_drop(log_ip, timeout, True, True)
+
+            # for line in log_ip:
+            #     ip = extract_ip(line)
+            #     _drop_simple(ip, timeout)
+            #     print('\r', str(ip), end=' ')
+            #     found_count = lib.increment(found_count)
+            #     # lib.msg_info(f'IP: {ip}')
 
         shutil.copyfile(log, log_prev)
 
