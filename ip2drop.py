@@ -567,48 +567,56 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
         log_len = len(open(log).readlines())
         exclude_from_check = excludes.split(' ')
 
-        if os.path.exists(log_prev):
-            # Compare files
-            cmp = filecmp.cmp(log, log_prev, shallow=False)
-
-            if not cmp:
-                lib.msg_info(f'Log files not seem equal...')
-                with open(log_prev) as log_1, open(log) as log_2:
-                    log_1_text = log_1.readlines()
-                    log_2_text = log_2.readlines()
-
-                # Comparing file method
-                with open(log_compared, 'w') as outFile:
-                    lib.msg_info(f'Comparing...')
-                    for line in log_2_text:
-                        print('\r', extract_ip(line), end=' ')
-                        if line not in log_1_text:
-                            outFile.write(line)
-
-                if not whitespace_only(log_compared):
-                    with open(log_compared, "r") as f:
-                        found_count = iterate_and_drop(f, timeout, True, False)
-                        # for line in f:
-                        #     ip = extract_ip(line)
-                        #     _drop_simple(ip, timeout)
-                        #     found_count = lib.increment(found_count)
-
-            else:
-                lib.msg_info(f'Log files seem equal. Ok.')
-
-        else:
+        if SKIP_LOG_PREV:
             with open(log, "r") as f:
                 for line in f:
                     log_ip.append(line)
 
             found_count = iterate_and_drop(log_ip, timeout, True, True)
+        else:
 
-            # for line in log_ip:
-            #     ip = extract_ip(line)
-            #     _drop_simple(ip, timeout)
-            #     print('\r', str(ip), end=' ')
-            #     found_count = lib.increment(found_count)
-            #     # lib.msg_info(f'IP: {ip}')
+            if os.path.exists(log_prev):
+                # Compare files
+                cmp = filecmp.cmp(log, log_prev, shallow=False)
+
+                if not cmp:
+                    lib.msg_info(f'Log files not seem equal...')
+                    with open(log_prev) as log_1, open(log) as log_2:
+                        log_1_text = log_1.readlines()
+                        log_2_text = log_2.readlines()
+
+                    # Comparing file method
+                    with open(log_compared, 'w') as outFile:
+                        lib.msg_info(f'Comparing...')
+                        for line in log_2_text:
+                            print('\r', extract_ip(line), end=' ')
+                            if line not in log_1_text:
+                                outFile.write(line)
+
+                    if not whitespace_only(log_compared):
+                        with open(log_compared, "r") as f:
+                            found_count = iterate_and_drop(f, timeout, True, False)
+                            # for line in f:
+                            #     ip = extract_ip(line)
+                            #     _drop_simple(ip, timeout)
+                            #     found_count = lib.increment(found_count)
+
+                else:
+                    lib.msg_info(f'Log files seem equal. Ok.')
+
+            else:
+                with open(log, "r") as f:
+                    for line in f:
+                        log_ip.append(line)
+
+                found_count = iterate_and_drop(log_ip, timeout, True, True)
+
+                # for line in log_ip:
+                #     ip = extract_ip(line)
+                #     _drop_simple(ip, timeout)
+                #     print('\r', str(ip), end=' ')
+                #     found_count = lib.increment(found_count)
+                #     # lib.msg_info(f'IP: {ip}')
 
         shutil.copyfile(log, log_prev)
 
