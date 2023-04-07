@@ -113,3 +113,8 @@ apt -y install python3 python3-pip python3-psutil python3-requests firewalld ips
 ```
 
 or just run `check-modules.sh` from `helpers` catalog.
+
+# Remote server
+
+You can user remote [cactusd](https://github.com/m0zgen/cactusd) server as central server for collect, aggregate dropped IP and 
+distribution for another `ip2drop` endpoints.
