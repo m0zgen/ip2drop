@@ -587,7 +587,7 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
 
                 if not whitespace_only(log_compared):
                     with open(log_compared, "r") as f:
-                        iterate_and_drop(f, timeout, True, False)
+                        found_count = iterate_and_drop(f, timeout, True, False)
                         # for line in f:
                         #     ip = extract_ip(line)
                         #     _drop_simple(ip, timeout)
@@ -601,7 +601,7 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes):
                 for line in f:
                     log_ip.append(line)
 
-            iterate_and_drop(log_ip, timeout, True, True)
+            found_count = iterate_and_drop(log_ip, timeout, True, True)
 
             # for line in log_ip:
             #     ip = extract_ip(line)
