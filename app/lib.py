@@ -111,12 +111,16 @@ def append_to_file(file, line):
 
 
 def check_http_200(url):
-    resp = requests.get(url)
-    if resp.status_code == 200:
-        # print("OK")
-        return True
-    else:
-        # print("False")
+    try:
+        resp = requests.get(url)
+        if resp.status_code == 200:
+            # print("OK")
+            return True
+        else:
+            # print("False")
+            return False
+    except requests.exceptions.InvalidSchema:
+        print("Host not available: ", url)
         return False
 
 
