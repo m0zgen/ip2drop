@@ -848,8 +848,9 @@ def main():
 
     for server in UPLOAD_SERVERS:
         upload_server = server.strip()
-        resp = post_upload_file(upload_server)
-        lib.msg_info(f'Response from remote server {upload_server}: {resp}')
+        if UPLOAD_TO_SERVER:
+            resp = post_upload_file(upload_server)
+            lib.msg_info(f'Response from remote server {upload_server}: {resp}')
 
 
 # Init starter
