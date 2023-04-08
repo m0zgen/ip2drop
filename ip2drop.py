@@ -88,8 +88,9 @@ UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 
 # Upload remote
 UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
-UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
-UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
+# UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
+UPLOAD_SERVERS = CONFIG['MAIN']['UPLOAD_SERVERS'].split(',')
+# UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
 
 
 # Arguments parser
@@ -212,7 +213,7 @@ def print_config():
     print("Hostname is {HOSTNAME}".format(HOSTNAME=lib.get_hostname()))
     print(f'Username: {username}')
     lib.msg_info(
-        f'Sever: {UPLOAD_SERVER}, Protocol: {UPLOAD_PROTOCOL}, Upload enabled? {UPLOAD_TO_SERVER}')
+        f'Sever(s): {UPLOAD_SERVERS}, Upload enabled? {UPLOAD_TO_SERVER}')
     exit(0)
 
 
@@ -631,23 +632,29 @@ def generate_upload_file(ip, export_to_upload):
             lib.append_to_file(UPLOAD_FILE, ip)
 
 
-def post_upload_file():
+def post_upload_file(target_server):
     if UPLOAD_TO_SERVER:
-        if lib.check_http_200(UPLOAD_SERVER):
-            lib.msg_info(f'Upload server available: {UPLOAD_SERVER}')
-            if os.path.exists(UPLOAD_FILE):
-                access_token = HOSTNAME + "-token"
-                hdr = {"Authorization": "Bearer %s" % access_token}
-                with open(UPLOAD_FILE, "rb") as fobj:
-                    file_obj = fobj.read()
-                    file_basename = os.path.basename(UPLOAD_FILE)
-                    file_to_upload = {"file": (str(file_basename), file_obj)}
-                    finfo = {"fullPath": UPLOAD_FILE}
-                    upload_response = requests.post(UPLOAD_SERVER, headers=hdr, files=file_to_upload, data=finfo)
-                    fobj.close()
-                # print("Status Code ", upload_response.status_code)
-                # print("JSON Response ", upload_response.json())
-                return upload_response
+
+        if lib.check_http_200(target_server):
+            lib.msg_info(f'Upload server available: {target_server}')
+        if os.path.exists(UPLOAD_FILE):
+            access_token = HOSTNAME + "-token"
+            hdr = {"Authorization": "Bearer %s" % access_token}
+            with open(UPLOAD_FILE, "rb") as fobj:
+                file_obj = fobj.read()
+                file_basename = os.path.basename(UPLOAD_FILE)
+                file_to_upload = {"file": (str(file_basename), file_obj)}
+                finfo = {"fullPath": UPLOAD_FILE}
+                try:
+                    upload_response = requests.post(target_server, headers=hdr, files=file_to_upload, data=finfo)
+                except requests.exceptions.InvalidSchema:
+                    upload_response = f'Host not available from response <InvalidSchema>: {target_server}'
+                except requests.exceptions.ConnectionError:
+                    upload_response = f'Host not available from response <ConnectionError>: {target_server}'
+                fobj.close()
+            # print("Status Code ", upload_response.status_code)
+            # print("JSON Response ", upload_response.json())
+            return upload_response
 
 
 # General
@@ -836,8 +843,14 @@ def main():
                         args.stat, d_drop_directly, d_skip_log_prev)
 
     add_routine_scan_time(lib.get_current_time())
-    lib.msg_info(f'Upload file response:')
-    print(post_upload_file())
+    # lib.msg_info(f'Upload file response:')
+    # print(post_upload_file())
+
+    for server in UPLOAD_SERVERS:
+        upload_server = server.strip()
+        if UPLOAD_TO_SERVER:
+            resp = post_upload_file(upload_server)
+            lib.msg_info(f'Response from remote server {upload_server}: {resp}')
 
 
 # Init starter
