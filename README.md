@@ -52,6 +52,14 @@ This is real-time firewalld action (not `--permanent`) for reset blocking IPs yo
 * `DROP_DIRECTLY` - drop immediately, without DB storing
 * `SKIP_DEFAULT_RULE` - Skip `[DEFAULT]` rule from `config.ini`
 
+## Main Config
+
+* `IP_EXCLUDES` - Exlude IP list from `drop` actions (only logging) 
+* `SKIP_DEFAULT_RULE` - Skip `[DEFAULT]` rule from `config.yml`
+* `UPLOAD` - Generate upload file with dropped IP list, with name <Server_Name>_upload.txt
+* `UPLOAD_TO_SERVER` - Upload generated file to remote web server (like [cactusd](https://github.com/m0zgen/cactusd))
+* `UPLOAD_SERVERS` - Remote servers address list
+
 ## Command Examples
 
 Set custom threshold for drop action:
