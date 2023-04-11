@@ -26,7 +26,8 @@ DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 # Arguments parser section
 # ------------------------------------------------------------------------------------------------------/
 parser_helper = argparse.ArgumentParser(description='IP2DROP helper')
-parser_helper.add_argument('-p', '--print', help='Show all records from table ip2drop', default=False, action='store_true')
+parser_helper.add_argument('-p', '--print', help='Show all records from table ip2drop', default=False,
+                           action='store_true')
 parser_helper.add_argument('-r', '--increment', help='Increment count by 1', default=False, action='store_true')
 parser_helper.add_argument('-s', '--show', help='Show info', default=False, action='store_true')
 parser_helper.add_argument('-i', '--ip', help='Get IP address info')
@@ -37,6 +38,7 @@ ip = args_helper.ip
 if_increment = args_helper.increment
 if_show = args_helper.show
 count = args_helper.count
+
 
 # Functions
 # ------------------------------------------------------------------------------------------------------/
@@ -192,7 +194,6 @@ print_all_tables()
 if if_show:
     show_info()
 
-
 if print_all:
     show_all_records()
     exit(0)
@@ -202,10 +203,8 @@ if count:
     update_by_count(count)
     exit(0)
 
-
 if ip:
     select_by_ip(ip)
-
 
 drop_date = get_drop_date_from_ip(ip)
 timeout = get_timeout_from_ip(ip)
@@ -248,3 +247,5 @@ def iterate_all_ips():
 
 
 iterate_all_ips()
+
+# TODO: Clean record from DB if timeout less than current date more than 1 month
