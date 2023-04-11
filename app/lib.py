@@ -209,8 +209,6 @@ def check_date(ip, drop_date, timeout):
     drop_date_as_dt = datetime.strptime(drop_date, var.DATETIME_DEFAULT_FORMAT)
     timeout_as_dt = datetime.strptime(timeout, var.DATETIME_DEFAULT_FORMAT)
 
-    print(f'Dropped: {drop_date}, Timeout: {timeout}, Current: {current_date}')
-
     # Time delta
     # ------------------------------------------------------------------------------------------------------/
 
@@ -222,6 +220,8 @@ def check_date(ip, drop_date, timeout):
     # print(delta.seconds)
     # print(delta.microseconds)
     # print(delta.total_seconds())
+
+    print(f'Dropped: {drop_date}, Timeout: {timeout}, Current: {current_date}')
 
     if current_date > timeout_as_dt:
         msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
