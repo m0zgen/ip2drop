@@ -143,7 +143,7 @@ def get_current_date():
 
 
 def get_current_time():
-    return datetime.datetime.now()
+    return datetime.now()
 
 # Connect to sqlite3
 # ------------------------------------------------------------------------------------------------------/
