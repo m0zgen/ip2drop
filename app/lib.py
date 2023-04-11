@@ -1,9 +1,9 @@
-import datetime
 import os
 import sqlite3
 import sys
 import logging
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from sys import platform
 import socket
