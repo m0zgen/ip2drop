@@ -28,6 +28,7 @@ sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
 from app.var import SERVER_MODE
 from app import lib
+import helper
 
 # Variables
 # ------------------------------------------------------------------------------------------------------/
@@ -697,7 +698,6 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
                 found_count = lib.increment(found_count)
-
                 generate_upload_file(ip, export_to_upload)
 
                 # Show threshold statistic without drop (arg: -s)
@@ -715,7 +715,13 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # IN DEVELOP:
                     # Exists in Drop
                     if ip_exist(ip):
-                        _drop(ip, timeout, count, True)
+                        db_drop_date = helper.get_drop_date(ip)
+                        db_undrop_date = helper.get_undrop_date(ip)
+                        if helper.check_date(db_drop_date, db_undrop_date):
+                            lib.msg_info(f'IP {ip} need ban again')
+                            _drop(ip, timeout, count, True)
+                            helper.increment_by_ip(ip)
+                            # TODO: Show in print info about increment
                         # if _review_exists(ip):
                         #     lib.msg_info(f'Need ban again {ip}')
                         #     _drop(ip, timeout, count, True)

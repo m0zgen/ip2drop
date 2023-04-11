@@ -31,11 +31,13 @@ DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 # ------------------------------------------------------------------------------------------------------/
 parser = argparse.ArgumentParser(description='IP2DROP helper')
 parser.add_argument('-p', '--print', help='Show all records from table ip2drop', default=False, action='store_true')
+parser.add_argument('-r', '--increment', help='Increment count by 1', default=False, action='store_true')
 parser.add_argument('-i', '--ip', help='Get IP address info')
 parser.add_argument('-c', '--count', help='Reset Count')
 args = parser.parse_args()
 print_all = args.print
 ip = args.ip
+if_increment = args.increment
 count = args.count
 
 
@@ -75,10 +77,6 @@ def show_all_records():
     print(c.fetchall())
 
 
-if print_all:
-    show_all_records()
-
-
 # Select columns from table ip2drop by ip
 # ------------------------------------------------------------------------------------------------------/
 def select_by_ip(ip):
@@ -88,10 +86,6 @@ def select_by_ip(ip):
     print(c.fetchall())
 
 
-if ip:
-    select_by_ip(ip)
-
-
 # Check if ip exist in table ip2drop
 # ------------------------------------------------------------------------------------------------------/
 def ip_exist(ip):
@@ -99,11 +93,11 @@ def ip_exist(ip):
     response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
     fetched = response.fetchone()[0]
     if fetched == 1:
-        # print("Exist")
+        print("Exist")
         conn.close()
         return True
     else:
-        # print("Does not exist")
+        print("Does not exist")
         conn.close()
         return False
 
@@ -115,11 +109,6 @@ def update_by_count(ip_count):
     c = conn.cursor()
     c.execute("""UPDATE ip2drop SET COUNT = :COUNT""", {'COUNT': ip_count})
     conn.commit()
-
-
-if count:
-    print("Count: " + count)
-    update_by_count(count)
 
 
 # Select drop_date from table ip2drop by ip
@@ -206,9 +195,26 @@ def check_date(drop_date, timeout):
     return bool_status
 
 
+if print_all:
+    show_all_records()
+    exit(0)
+
+if count:
+    print("Count: " + count)
+    update_by_count(count)
+    exit(0)
+
+
+if ip:
+    select_by_ip(ip)
+
+
 if ip_exist(ip):
     if check_date(drop_date, timeout):
-        print("Need ban again")
-        increment_by_ip(ip)
+        lib.msg_info(f'IP {ip} need ban again')
+        if if_increment:
+            lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
+            increment_by_ip(ip)
+
 else:
     lib.msg_info(f'IP {ip} not exist in table ip2drop')
