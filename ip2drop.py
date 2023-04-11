@@ -169,7 +169,10 @@ def rebind_db(previous_db):
     postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
     new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
     print(new_name)
-    os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+    try:
+        os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+    except FileNotFoundError:
+        lib.msg_info(f'File not found. DB will create from scratch. DB name {DROP_DB_NAME}')
     # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
     var.create_db_schema()
 
