@@ -185,7 +185,8 @@ def check_date(drop_date, timeout):
         lib.msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
         bool_status = True
     else:
-        lib.msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
+        # print("Timeout less than current date. No need action. Left: " + str(delta))
+        lib.msg_info(f'Timeout less than current date. No need action. Left: {str(delta)}')
 
     return bool_status
 
