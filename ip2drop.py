@@ -717,7 +717,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     if ip_exist(ip):
                         db_drop_date = helper.get_drop_date_from_ip(ip)
                         db_undrop_date = helper.get_timeout_from_ip(ip)
-                        if helper.check_date(db_drop_date, db_undrop_date):
+                        if helper.check_date(ip, db_drop_date, db_undrop_date):
                             lib.msg_info(f'IP {ip} need ban again')
                             _drop(ip, timeout, count, True)
                             helper.increment_by_ip(ip)
