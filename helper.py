@@ -25,19 +25,18 @@ DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 # Arguments parser section
 # ------------------------------------------------------------------------------------------------------/
-parser = argparse.ArgumentParser(description='IP2DROP helper')
-parser.add_argument('-hp', '--helper-print', help='Show all records from table ip2drop', default=False, action='store_true')
-parser.add_argument('-hr', '--helper-increment', help='Increment count by 1', default=False, action='store_true')
-parser.add_argument('-hs', '--helper-show', help='Show info', default=False, action='store_true')
-parser.add_argument('-hi', '--helper-ip', help='Get IP address info')
-parser.add_argument('-hc', '--helper-count', help='Reset Count')
-args = parser.parse_args()
-print_all = args.print
-ip = args.ip
-if_increment = args.increment
-if_show = args.show
-count = args.count
-
+parser_helper = argparse.ArgumentParser(description='IP2DROP helper')
+parser_helper.add_argument('-hp', '--helper-print', help='Show all records from table ip2drop', default=False, action='store_true')
+parser_helper.add_argument('-hr', '--helper-increment', help='Increment count by 1', default=False, action='store_true')
+parser_helper.add_argument('-hs', '--helper-show', help='Show info', default=False, action='store_true')
+parser_helper.add_argument('-hi', '--helper-ip', help='Get IP address info')
+parser_helper.add_argument('-hc', '--helper-count', help='Reset Count')
+args_helper = parser_helper.parse_args()
+print_all = args_helper.print
+ip = args_helper.ip
+if_increment = args_helper.increment
+if_show = args_helper.show
+count = args_helper.count
 
 # Functions
 # ------------------------------------------------------------------------------------------------------/

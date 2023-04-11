@@ -1,5 +1,6 @@
 import datetime
 import os
+import sqlite3
 import sys
 import logging
 import subprocess
@@ -143,3 +144,90 @@ def get_current_date():
 
 def get_current_time():
     return datetime.datetime.now()
+
+# Connect to sqlite3
+# ------------------------------------------------------------------------------------------------------/
+def connect_db():
+    try:
+        conn = sqlite3.connect(var.DROP_DB)
+        return conn
+    except sqlite3.Error as e:
+        print(e)
+    return None
+
+# Select drop_date from table ip2drop by ip
+# ------------------------------------------------------------------------------------------------------/
+def get_drop_date_from_ip(ip):
+    fetched_date = ""
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("SELECT drop_date FROM ip2drop WHERE ip = ?", (ip,))
+    # print(c.fetchall())
+
+    # Iterate over list c.fetchall()
+    # ---------------------------------/
+    for row in c.fetchall():
+        fetched_date = row[0]
+    return fetched_date
+
+
+# Select timeout from table ip2drop by ip
+# ------------------------------------------------------------------------------------------------------/
+def get_timeout_from_ip(ip):
+    fetched_date = ""
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("SELECT timeout FROM ip2drop WHERE ip = ?", (ip,))
+    # print(c.fetchall())
+    for row in c.fetchall():
+        fetched_date = row[0]
+    return fetched_date
+
+
+# Increment record to table ip2drop by ip
+# Increment count by +1
+# ------------------------------------------------------------------------------------------------------/
+def increment_by_ip(ip):
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("""UPDATE ip2drop SET COUNT = COUNT + 1 WHERE ip = ?""", (ip,))
+    conn.commit()
+
+
+# Check date less than or more than current date
+# ------------------------------------------------------------------------------------------------------/
+def check_date(ip, drop_date, timeout):
+    current_date = datetime.now()
+    bool_status = False
+
+    # Convert list to string
+    # ---------------------------------/
+    drop_date = str(drop_date)
+    timeout = str(timeout)
+    # Convert string to datetime
+    # ---------------------------------/
+    drop_date_as_dt = datetime.strptime(drop_date, var.DATETIME_DEFAULT_FORMAT)
+    timeout_as_dt = datetime.strptime(timeout, var.DATETIME_DEFAULT_FORMAT)
+
+    print(f'Drop date: {drop_date}, Timeout: {timeout}, Current date: {current_date}')
+
+    # Time delta
+    # ------------------------------------------------------------------------------------------------------/
+
+    # String to datetime
+    timeout = datetime.strptime(timeout, var.DATETIME_DEFAULT_FORMAT)
+    delta = timeout - current_date
+
+    # print(delta.days)
+    # print(delta.seconds)
+    # print(delta.microseconds)
+    # print(delta.total_seconds())
+
+    if current_date > timeout_as_dt:
+        msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
+        bool_status = True
+    else:
+        # print("Timeout less than current date. No need action. Left: " + str(delta))
+        msg_info(f'{ip} - Timeout less than current date. No need action. Left: {str(delta)}')
+
+    return bool_status

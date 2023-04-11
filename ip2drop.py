@@ -28,7 +28,7 @@ sys.path.append(str(Path(sys.argv[0]).absolute().parent.parent))
 from app import var
 from app.var import SERVER_MODE
 from app import lib
-import helper
+
 
 # Variables
 # ------------------------------------------------------------------------------------------------------/
@@ -715,12 +715,12 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # IN DEVELOP:
                     # Exists in Drop
                     if ip_exist(ip):
-                        db_drop_date = helper.get_drop_date_from_ip(ip)
-                        db_undrop_date = helper.get_timeout_from_ip(ip)
-                        if helper.check_date(ip, db_drop_date, db_undrop_date):
+                        db_drop_date = lib.get_drop_date_from_ip(ip)
+                        db_undrop_date = lib.get_timeout_from_ip(ip)
+                        if lib.check_date(ip, db_drop_date, db_undrop_date):
                             lib.msg_info(f'IP {ip} need ban again')
                             _drop(ip, timeout, count, True)
-                            helper.increment_by_ip(ip)
+                            lib.increment_by_ip(ip)
                             # TODO: Show in print info about increment
                         # if _review_exists(ip):
                         #     lib.msg_info(f'Need ban again {ip}')

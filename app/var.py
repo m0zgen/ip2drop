@@ -42,6 +42,7 @@ def get_parent_directory():
 
 # Vars
 APP_ENV = os.getenv("IP2DROP_ENV")
+DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 PARENT_DIR = get_parent_directory()
 CURR_DIR = get_current_dir()
