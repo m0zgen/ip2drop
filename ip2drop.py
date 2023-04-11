@@ -169,7 +169,10 @@ def rebind_db(previous_db):
     postfix_name = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
     new_name = DROP_DB_NAME + '_v_' + str(previous_db) + '_' + postfix_name
     print(new_name)
-    os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+    try:
+        os.rename(DROP_DB, os.path.join(var.BACKUP_DIR, new_name))
+    except FileNotFoundError:
+        lib.msg_info(f'File not found. DB will create from scratch. DB name {DROP_DB_NAME}')
     # subprocess.call("cp %s %s" % (DROP_DB, var.BACKUP_DIR), shell=True)
     var.create_db_schema()
 
@@ -183,7 +186,7 @@ def check_app_versioning():
         current_db = app_json_data['ip2drop']['current_database_version']
         if previous_db < current_db:
             lib.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
-            rebind_db(previous_db, current_db)
+            rebind_db(previous_db)
             app_json_data['ip2drop']['previous_database_version'] = current_db
             with open(var.APP_JSON, "w") as jsonFile:
                 json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)

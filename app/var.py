@@ -69,12 +69,6 @@ DEFAULT_CONFIG = os.path.join(BASE_DIR, 'config.ini')
 PROD_CONFIG = os.path.join(BASE_DIR, 'config-prod.ini')
 PROD_CONF_DIR = os.path.join(BASE_DIR, 'prod.d')
 
-# DB
-DROP_DB_NAME = 'db.sqlite3'
-DROP_DB = os.path.join(DB_DIR, DROP_DB_NAME)
-DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
-ARG_DEFAULT_MSG = "Drop IP Information"
-
 # App JSON
 APP_JSON_NAME = 'app.json'
 APP_JSON = os.path.join(BASE_DIR, APP_JSON_NAME)
@@ -110,6 +104,7 @@ def get_config_files():
     return d_config_files, d_config_count
     # print(D_CONFIG_FILES)
 
+
 def get_prod_config_files():
     d_config_files = []
     d_config_count = 0
@@ -121,6 +116,14 @@ def get_prod_config_files():
             d_config_count += 1
     return d_config_files, d_config_count
     # print(D_CONFIG_FILES)
+
+
+# DB
+DROP_DB_NAME = CONFIG['MAIN']['DROP_DB_NAME']
+DROP_DB = os.path.join(DB_DIR, DROP_DB_NAME)
+DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
+ARG_DEFAULT_MSG = "Drop IP Information"
+
 
 # Make DB
 def create_db_schema():
