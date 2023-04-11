@@ -209,7 +209,7 @@ def check_date(ip, drop_date, timeout):
     drop_date_as_dt = datetime.strptime(drop_date, var.DATETIME_DEFAULT_FORMAT)
     timeout_as_dt = datetime.strptime(timeout, var.DATETIME_DEFAULT_FORMAT)
 
-    print(f'Drop date: {drop_date}, Timeout: {timeout}, Current date: {current_date}')
+    print(f'Dropped: {drop_date}, Timeout: {timeout}, Current: {current_date}')
 
     # Time delta
     # ------------------------------------------------------------------------------------------------------/
