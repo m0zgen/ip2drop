@@ -183,7 +183,7 @@ def check_app_versioning():
         current_db = app_json_data['ip2drop']['current_database_version']
         if previous_db < current_db:
             lib.msg_info(f'Need update DB. Current version: {previous_db}. Next release: {current_db}')
-            rebind_db(previous_db, current_db)
+            rebind_db(previous_db)
             app_json_data['ip2drop']['previous_database_version'] = current_db
             with open(var.APP_JSON, "w") as jsonFile:
                 json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)
