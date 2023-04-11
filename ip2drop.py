@@ -750,11 +750,6 @@ def main():
     args = arg_parse()
     check_app_versioning()
 
-    if IS_UPLOAD_ENABLED:
-        lib.check_dir(UPLOAD_DIR)
-        lib.check_file(UPLOAD_FILE)
-        lib.truncate_file(UPLOAD_FILE)
-
     # Dirty step
     # TODO: Need to make more beauty)
     # print(type(IPSET_NAME))
@@ -820,6 +815,12 @@ def main():
     # print(f'Checking threshold: {args.threshold}')
     lib.log_info(f'ip2drop started with params:')
     lib.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
+
+    # Truncate upload log
+    if IS_UPLOAD_ENABLED:
+        lib.check_dir(UPLOAD_DIR)
+        lib.check_file(UPLOAD_FILE)
+        lib.truncate_file(UPLOAD_FILE)
 
     # Main functions
     if not SKIP_DEFAULT_RULE or args.includedefault:
