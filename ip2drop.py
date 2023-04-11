@@ -160,7 +160,7 @@ def get_app_json(file):
             data = json.load(json_file)
             # print(data['ip2drop']['author'])
             return data
-    except:
+    except FileNotFoundError:
         return data
 
 
@@ -609,9 +609,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
                     lib.msg_info(f'Log files seem equal. Ok.')
 
             else:
-                with open(log, "r") as f:
-                    for line in f:
-                        log_ip.append(line)
+                if not whitespace_only(log):
+                    with open(log, "r") as f:
+                        for line in f:
+                            log_ip.append(line)
 
                 found_count = iterate_and_drop(log_ip, timeout, True, True)
 
@@ -749,11 +750,6 @@ def main():
     args = arg_parse()
     check_app_versioning()
 
-    if IS_UPLOAD_ENABLED:
-        lib.check_dir(UPLOAD_DIR)
-        lib.check_file(UPLOAD_FILE)
-        lib.truncate_file(UPLOAD_FILE)
-
     # Dirty step
     # TODO: Need to make more beauty)
     # print(type(IPSET_NAME))
@@ -819,6 +815,12 @@ def main():
     # print(f'Checking threshold: {args.threshold}')
     lib.log_info(f'ip2drop started with params:')
     lib.log_info(f'Command: {args.command} Log: {ctl_log} Threshold {args.threshold} Stat: {args.stat}')
+
+    # Truncate upload log
+    if IS_UPLOAD_ENABLED:
+        lib.check_dir(UPLOAD_DIR)
+        lib.check_file(UPLOAD_FILE)
+        lib.truncate_file(UPLOAD_FILE)
 
     # Main functions
     if not SKIP_DEFAULT_RULE or args.includedefault:
