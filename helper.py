@@ -26,11 +26,11 @@ DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 # Arguments parser section
 # ------------------------------------------------------------------------------------------------------/
 parser = argparse.ArgumentParser(description='IP2DROP helper')
-parser.add_argument('-p', '--print', help='Show all records from table ip2drop', default=False, action='store_true')
-parser.add_argument('-r', '--increment', help='Increment count by 1', default=False, action='store_true')
-parser.add_argument('-s', '--show', help='Show info', default=False, action='store_true')
-parser.add_argument('-i', '--ip', help='Get IP address info')
-parser.add_argument('-c', '--count', help='Reset Count')
+parser.add_argument('-hp', '--helper-print', help='Show all records from table ip2drop', default=False, action='store_true')
+parser.add_argument('-hr', '--helper-increment', help='Increment count by 1', default=False, action='store_true')
+parser.add_argument('-hs', '--helper-show', help='Show info', default=False, action='store_true')
+parser.add_argument('-hi', '--helper-ip', help='Get IP address info')
+parser.add_argument('-hc', '--helper-count', help='Reset Count')
 args = parser.parse_args()
 print_all = args.print
 ip = args.ip
