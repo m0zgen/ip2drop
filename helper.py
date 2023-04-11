@@ -182,10 +182,10 @@ def check_date(drop_date, timeout):
     # print(delta.total_seconds())
 
     if current_date > timeout_as_dt:
-        print("Timeout more than current date. Need ban again. Overdue: " + str(delta))
+        lib.msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
         bool_status = True
     else:
-        print("Timeout less than current date. No need action. Left: " + str(delta))
+        lib.msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
 
     return bool_status
 
