@@ -609,9 +609,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
                     lib.msg_info(f'Log files seem equal. Ok.')
 
             else:
-                with open(log, "r") as f:
-                    for line in f:
-                        log_ip.append(line)
+                if not whitespace_only(log):
+                    with open(log, "r") as f:
+                        for line in f:
+                            log_ip.append(line)
 
                 found_count = iterate_and_drop(log_ip, timeout, True, True)
 
