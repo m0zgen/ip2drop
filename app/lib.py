@@ -228,6 +228,6 @@ def check_date(ip, drop_date, timeout):
         bool_status = True
     else:
         # print("Timeout less than current date. No need action. Left: " + str(delta))
-        msg_info(f'{ip} - Timeout less than current date. No need action. Left: {str(delta)}')
+        msg_info(f'{ip} - Timeout is greater than current date. No need action. Left: {str(delta)}')
 
     return bool_status
