@@ -20,10 +20,6 @@ from app import lib
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG = var.CONFIG
 
-lib.msg_info(f'Loaded config: {var.LOADED_CONFIG}')
-lib.msg_info(f'Server mode: {SERVER_MODE}')
-lib.msg_info(f'Config DB: {var.DROP_DB}')
-
 # Datetime Format for Journalctl exported logs
 DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
@@ -32,17 +28,23 @@ DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 parser = argparse.ArgumentParser(description='IP2DROP helper')
 parser.add_argument('-p', '--print', help='Show all records from table ip2drop', default=False, action='store_true')
 parser.add_argument('-r', '--increment', help='Increment count by 1', default=False, action='store_true')
+parser.add_argument('-s', '--show', help='Show info', default=False, action='store_true')
 parser.add_argument('-i', '--ip', help='Get IP address info')
 parser.add_argument('-c', '--count', help='Reset Count')
 args = parser.parse_args()
 print_all = args.print
 ip = args.ip
 if_increment = args.increment
+if_show = args.show
 count = args.count
 
 
 # Functions
 # ------------------------------------------------------------------------------------------------------/
+def show_info():
+    lib.msg_info(f'Loaded config: {var.LOADED_CONFIG}')
+    lib.msg_info(f'Server mode: {SERVER_MODE}')
+    lib.msg_info(f'Config DB: {var.DROP_DB}')
 
 
 # Connect to sqlite3
@@ -113,7 +115,7 @@ def update_by_count(ip_count):
 
 # Select drop_date from table ip2drop by ip
 # ------------------------------------------------------------------------------------------------------/
-def select_drop_date_by_ip(ip):
+def get_drop_date_from_ip(ip):
     fetched_date = ""
     conn = connect_db()
     c = conn.cursor()
@@ -129,7 +131,7 @@ def select_drop_date_by_ip(ip):
 
 # Select timeout from table ip2drop by ip
 # ------------------------------------------------------------------------------------------------------/
-def select_timeout_by_ip(ip):
+def get_timeout_from_ip(ip):
     fetched_date = ""
     conn = connect_db()
     c = conn.cursor()
@@ -138,12 +140,6 @@ def select_timeout_by_ip(ip):
     for row in c.fetchall():
         fetched_date = row[0]
     return fetched_date
-
-
-drop_date = select_drop_date_by_ip(ip)
-timeout = select_timeout_by_ip(ip)
-
-print(f'Drop date: {drop_date}, Timeout: {timeout}')
 
 
 # Increment record to table ip2drop by ip
@@ -195,6 +191,10 @@ def check_date(drop_date, timeout):
     return bool_status
 
 
+if if_show:
+    show_info()
+
+
 if print_all:
     show_all_records()
     exit(0)
@@ -208,6 +208,11 @@ if count:
 if ip:
     select_by_ip(ip)
 
+
+drop_date = get_drop_date_from_ip(ip)
+timeout = get_timeout_from_ip(ip)
+
+print(f'Drop date: {drop_date}, Timeout: {timeout}')
 
 if ip_exist(ip):
     if check_date(drop_date, timeout):
