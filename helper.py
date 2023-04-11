@@ -154,7 +154,7 @@ def increment_by_ip(ip):
 
 # Check date less than or more than current date
 # ------------------------------------------------------------------------------------------------------/
-def check_date(drop_date, timeout):
+def check_date(ip, drop_date, timeout):
     current_date = datetime.now()
     bool_status = False
 
@@ -215,7 +215,7 @@ timeout = get_timeout_from_ip(ip)
 print(f'Drop date: {drop_date}, Timeout: {timeout}')
 
 if ip_exist(ip):
-    if check_date(drop_date, timeout):
+    if check_date(ip, drop_date, timeout):
         lib.msg_info(f'IP {ip} need ban again')
         if if_increment:
             lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
