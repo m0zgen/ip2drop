@@ -160,7 +160,7 @@ def get_app_json(file):
             data = json.load(json_file)
             # print(data['ip2drop']['author'])
             return data
-    except:
+    except FileNotFoundError:
         return data
 
 
