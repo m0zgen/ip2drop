@@ -169,12 +169,6 @@ def check_date(drop_date, timeout):
 
     print(f'Drop date: {drop_date}, Timeout: {timeout}, Current date: {current_date}')
 
-    if current_date > timeout_as_dt:
-        print("Timeout more than current date. Need ban again")
-        bool_status = True
-    else:
-        print("Timeout less than current date. No need action")
-
     # Time delta
     # ------------------------------------------------------------------------------------------------------/
 
@@ -182,11 +176,16 @@ def check_date(drop_date, timeout):
     timeout = datetime.strptime(timeout, DATETIME_DEFAULT_FORMAT)
     delta = timeout - current_date
 
-    print(delta)
     # print(delta.days)
     # print(delta.seconds)
     # print(delta.microseconds)
     # print(delta.total_seconds())
+
+    if current_date > timeout_as_dt:
+        print("Timeout more than current date. Need ban again. Overdue: " + str(delta))
+        bool_status = True
+    else:
+        print("Timeout less than current date. No need action. Left: " + str(delta))
 
     return bool_status
 
