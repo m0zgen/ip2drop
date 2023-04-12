@@ -693,6 +693,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
             # Checking threshold
             elif count >= threshold and threshold > 0 and ip != IP_NONE:
+                lib.msg_info(f'Checking IPs...')
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
@@ -714,7 +715,6 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
                     # IN DEVELOP:
                     # Exists in Drop
-                    lib.msg_info(f'Checking IPs...')
                     if ip_exist(ip):
                         print('\r', ip, end=' ')
                         db_drop_date = lib.get_drop_date_from_ip(ip)
