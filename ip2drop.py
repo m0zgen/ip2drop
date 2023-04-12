@@ -692,8 +692,8 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
             #         drop_now(log, threshold, timeout, showstat)
 
             # Checking threshold
-            elif count >= threshold and threshold > 0 and ip != IP_NONE:
-                lib.msg_info(f'Checking IPs...')
+            # elif count >= threshold and threshold > 0 and ip != IP_NONE:
+            elif count >= threshold > 0 and ip != IP_NONE:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
