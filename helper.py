@@ -2,6 +2,7 @@
 # Author: Yevgeniy Goncharov, https://lab.sys-adm.in
 # Helper for ip2drop script. Status: testing
 import argparse
+import json
 import os
 import sqlite3
 import sys
@@ -224,26 +225,79 @@ else:
 
 # Iterate all ips from table ip2drop
 # ------------------------------------------------------------------------------------------------------/
+def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id):
+    data = {
+        "ip": ip,
+        "ip_int": ip_int,
+        "status": status,
+        "count": count,
+        "timeout": timeout,
+        "drop_date": drop_date,
+        "creatioon_date": creatioon_date,
+        "group_id": group_id
+    }
+    with open('data.json', 'w') as outfile:
+        json.dump(data, outfile, indent=4, sort_keys=False)
+
+
+def export_data_to_json2(data):
+    with open('data2.json', 'w') as outfile:
+        json.dump(data, outfile, indent=4, sort_keys=False)
+
+
 def iterate_all_ips():
+    data = []
     conn = connect_db()
     c = conn.cursor()
     c.execute("SELECT * FROM ip2drop")
     # print(c.fetchall())
 
+    # export_data_to_json2(to_json)
+
     # Iterate over list c.fetchall()
     # ---------------------------------/
     for row in c.fetchall():
         ip = row[0]
-        drop_date = row[5]
-        timeout = row[4]
+        ip_int = row[1]
+        status = row[2]
         count = row[3]
-        print(f'IP: {ip}, Drop date: {drop_date}, Timeout: {timeout}, Count: {count}')
+        timeout = row[4]
+        drop_date = row[5]
+        creatioon_date = row[6]
+        group_id = row[7]
+
+        print(f'IP: {ip} (int variant: {ip_int}), '
+              f'Drop date: {drop_date}, Status: {status}, '
+              f'Count: {count}, Timeout: {timeout}, '
+              f'Drop date: {drop_date}, Creation date: {creatioon_date}, '
+              f'Group ID: {group_id}')
+
+
+        # Append data to json file
+        # ------------------------------------------------------------------------------------------------------/
+        data.append({
+            "ip": ip,
+            "ip_int": ip_int,
+            "status": status,
+            "count": count,
+            "timeout": timeout,
+            "drop_date": drop_date,
+            "creatioon_date": creatioon_date,
+            "group_id": group_id
+        })
+
+
+        # Export data to json file
+        # ------------------------------------------------------------------------------------------------------/
+        export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id)
 
         if check_date(ip, drop_date, timeout):
             lib.msg_info(f'IP {ip} need ban again')
             if if_increment:
                 lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
                 increment_by_ip(ip)
+
+        export_data_to_json2(data)
 
 
 iterate_all_ips()
