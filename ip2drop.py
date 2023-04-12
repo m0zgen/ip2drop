@@ -715,6 +715,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # IN DEVELOP:
                     # Exists in Drop
                     if ip_exist(ip):
+                        lib.msg_info(f'Checking existing IPs...')
                         print('\r', ip, end=' ')
                         db_drop_date = lib.get_drop_date_from_ip(ip)
                         db_undrop_date = lib.get_timeout_from_ip(ip)
