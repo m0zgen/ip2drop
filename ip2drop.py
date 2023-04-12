@@ -692,7 +692,8 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
             #         drop_now(log, threshold, timeout, showstat)
 
             # Checking threshold
-            elif count >= threshold and threshold > 0 and ip != IP_NONE:
+            # elif count >= threshold and threshold > 0 and ip != IP_NONE:
+            elif count >= threshold > 0 and ip != IP_NONE:
                 int_ip = int(ipaddress.IPv4Address(ip))
                 # IP from int converter
                 from_int = ipaddress.IPv4Address(int_ip)
@@ -715,6 +716,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                     # IN DEVELOP:
                     # Exists in Drop
                     if ip_exist(ip):
+                        print('Checking\r', ip, end=' ')
                         db_drop_date = lib.get_drop_date_from_ip(ip)
                         db_undrop_date = lib.get_timeout_from_ip(ip)
                         if lib.check_date(ip, db_drop_date, db_undrop_date):

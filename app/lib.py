@@ -145,6 +145,7 @@ def get_current_date():
 def get_current_time():
     return datetime.now()
 
+
 # Connect to sqlite3
 # ------------------------------------------------------------------------------------------------------/
 def connect_db():
@@ -154,6 +155,7 @@ def connect_db():
     except sqlite3.Error as e:
         print(e)
     return None
+
 
 # Select drop_date from table ip2drop by ip
 # ------------------------------------------------------------------------------------------------------/
@@ -221,13 +223,15 @@ def check_date(ip, drop_date, timeout):
     # print(delta.microseconds)
     # print(delta.total_seconds())
 
-    print(f'Dropped: {drop_date}, Timeout: {timeout}, Current: {current_date}')
+    log_info(f'Dropped: {drop_date}, Timeout: {timeout}, Current: {current_date}')
 
     if current_date > timeout_as_dt:
         msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
+        log_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
         bool_status = True
     else:
         # print("Timeout less than current date. No need action. Left: " + str(delta))
-        msg_info(f'{ip} - Timeout is greater than current date. No need action. Left: {str(delta)}')
+        # msg_info(f'{ip} - Timeout is greater than current date. No need action. Left: {str(delta)}')
+        log_info(f'{ip} - Timeout is greater than current date. No need action. Left: {str(delta)}')
 
     return bool_status
