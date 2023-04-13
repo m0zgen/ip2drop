@@ -6,6 +6,13 @@
 # shellcheck disable=SC2046
 # shellcheck disable=SC2006
 SCRIPT_PATH="$(cd `dirname "${BASH_SOURCE[0]}"` && pwd)"; cd "${SCRIPT_PATH}"
+UPLOAD_DIR="../upload"
+
+# Check is upload directory exists
+if [ ! -d "${UPLOAD_DIR}" ]; then
+  echo "Upload directory not exists"
+  exit 1
+fi
 
 # Color echo function
 function green_color_echo() {
