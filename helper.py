@@ -30,6 +30,7 @@ parser_helper = argparse.ArgumentParser(description='IP2DROP helper')
 parser_helper.add_argument('-p', '--print', help='Show all records from table ip2drop', default=False,
                            action='store_true')
 parser_helper.add_argument('-r', '--increment', help='Increment count by 1', default=False, action='store_true')
+parser_helper.add_argument('-a', '--all', help='Show all tables', default=False, action='store_true')
 parser_helper.add_argument('-s', '--show', help='Show info', default=False, action='store_true')
 parser_helper.add_argument('-i', '--ip', help='Get IP address info')
 parser_helper.add_argument('-c', '--count', help='Reset Count')
@@ -38,6 +39,7 @@ print_all = args_helper.print
 ip = args_helper.ip
 if_increment = args_helper.increment
 if_show = args_helper.show
+if_all = args_helper.all
 count = args_helper.count
 
 
@@ -272,7 +274,6 @@ def iterate_all_ips():
               f'Drop date: {drop_date}, Creation date: {creatioon_date}, '
               f'Group ID: {group_id}')
 
-
         # Append data to json file
         # ------------------------------------------------------------------------------------------------------/
         data.append({
@@ -285,7 +286,6 @@ def iterate_all_ips():
             "creatioon_date": creatioon_date,
             "group_id": group_id
         })
-
 
         # Export data to json file
         # ------------------------------------------------------------------------------------------------------/
@@ -300,6 +300,9 @@ def iterate_all_ips():
         export_data_to_json2(data)
 
 
-iterate_all_ips()
+# If show all ips
+# ------------------------------------------------------------------------------------------------------/
+if if_all:
+    iterate_all_ips()
 
 # TODO: Clean record from DB if timeout less than current date more than 1 month
