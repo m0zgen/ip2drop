@@ -54,6 +54,10 @@ def log_crit(msg):
     logging.critical(msg)
 
 
+def msg_error(msg):
+    log_err(msg)
+    print(msg)
+
 def msg_info(msg):
     log_info(msg)
     print(msg)
@@ -226,8 +230,8 @@ def check_date(ip, drop_date, timeout):
     log_info(f'Dropped: {drop_date}, Timeout: {timeout}, Current: {current_date}')
 
     if current_date > timeout_as_dt:
-        msg_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
-        log_info(f'IP {ip} need ban again. Overdue: {str(delta)}')
+        # msg_info(f'IP {ip} exists. Need ban again. Overdue: {str(delta)}')
+        log_info(f'IP {ip} exists. Need ban again. Overdue: {str(delta)}')
         bool_status = True
     else:
         # print("Timeout less than current date. No need action. Left: " + str(delta))
