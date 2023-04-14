@@ -385,20 +385,6 @@ def get_timeout_from_ip(ip):
     c = conn.cursor()
     c.execute("SELECT timeout FROM ip2drop WHERE ip = ?", (ip,))
     timeout = c.fetchone()[0]
-
-    # Convert list to string
-    # ---------------------------------/
-    # timeout = str(timeout)
-    # print(f'Timeout: {timeout}')
-
-    # Check format
-    # ---------------------------------/
-    # detect_datetime_format(timeout)
-
-    # Convert string to datetime
-    # ---------------------------------/
-    # timeout_as_dt = datetime.strptime(timeout, DATETIME_DEFAULT_FORMAT)
-
     return timeout
 
 
