@@ -3,7 +3,7 @@ import sqlite3
 import sys
 import logging
 import subprocess
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from sys import platform
 import socket
@@ -161,6 +161,22 @@ def connect_db():
     return None
 
 
+# Check if ip exist in table ip2drop
+# ------------------------------------------------------------------------------------------------------/
+def ip_exist(ip):
+    conn = connect_db()
+    response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
+    fetched = response.fetchone()[0]
+    if fetched == 1:
+        # print("Exist")
+        conn.close()
+        return True
+    else:
+        # print("Does not exist")
+        conn.close()
+        return False
+
+
 # Select drop_date from table ip2drop by ip
 # ------------------------------------------------------------------------------------------------------/
 def get_drop_date_from_ip(ip):
@@ -184,10 +200,64 @@ def get_timeout_from_ip(ip):
     conn = connect_db()
     c = conn.cursor()
     c.execute("SELECT timeout FROM ip2drop WHERE ip = ?", (ip,))
-    # print(c.fetchall())
     for row in c.fetchall():
         fetched_date = row[0]
     return fetched_date
+
+
+# Check timeout date less than current date more than 1 month (DROP_DB_CLEAN)
+# ------------------------------------------------------------------------------------------------------/
+def check_timeout_date(ip, timeout):
+    current_date = datetime.now()
+    bool_status = False
+
+    # Convert list to string
+    # ---------------------------------/
+    timeout = str(timeout)
+    # Convert string to datetime
+    # ---------------------------------/
+    timeout_as_dt = datetime.strptime(timeout, var.DATETIME_DEFAULT_FORMAT)
+
+    # timeout_as_dt plus DElETE_DB_CLEAN days
+    # ---------------------------------/
+
+    # Convert DROP_DB_CLEAN_DAYS to int
+    days = int(var.DROP_DB_CLEAN_DAYS)
+    timeout_as_dt = timeout_as_dt + timedelta(days=days)
+
+    print(f'Timeout + DROP_DB_CLEAN_DAYS {var.DROP_DB_CLEAN_DAYS} as dt: {timeout_as_dt}. Current date: {current_date}')
+
+    # Time delta
+    # ------------------------------------------------------------------------------------------------------/
+
+    # String to datetime
+    timeout_as_dt_str = str(timeout_as_dt)
+    timeout_as_dt_str = datetime.strptime(timeout_as_dt_str, var.DATETIME_DEFAULT_FORMAT)
+    delta = timeout_as_dt_str - current_date
+
+    # print(delta.days)
+    # print(delta.seconds)
+    # print(delta.microseconds)
+    # print(delta.total_seconds())
+
+    if current_date > timeout_as_dt:
+        msg_info(f'IP {ip} need delete from DB. Overdue: {str(delta)}')
+        bool_status = True
+    else:
+        # print("Timeout less than current date. No need action. Left: " + str(delta))
+        msg_info(f'{ip} - Timeout is greater than than current date. No need action. Left: {str(delta)}')
+
+    return bool_status
+
+
+# Delete record from DB if timeout less than current date more than 1 month (DROP_DB_CLEAN)
+# ------------------------------------------------------------------------------------------------------/
+def delete_record_from_db(ip):
+    conn = connect_db()
+    c = conn.cursor()
+    msg_info(f'Deleting record from DB for IP {ip}')
+    c.execute("""DELETE FROM ip2drop WHERE ip = ?""", (ip,))
+    conn.commit()
 
 
 # Increment record to table ip2drop by ip

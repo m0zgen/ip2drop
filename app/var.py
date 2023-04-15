@@ -124,6 +124,7 @@ DROP_DB_NAME = CONFIG['MAIN']['DROP_DB_NAME']
 DROP_DB = os.path.join(DB_DIR, DROP_DB_NAME)
 DROP_DB_SCHEMA = os.path.join(SRC_DIR, 'db_schema.sql')
 ARG_DEFAULT_MSG = "Drop IP Information"
+DROP_DB_CLEAN_DAYS = CONFIG['MAIN']['DROP_DB_CLEAN_DAYS']
 
 
 # Make DB
