@@ -117,7 +117,7 @@ def checking_existing_ip_for_drop_needed(ip):
 
 # Iterate all ips from table ip2drop
 # ------------------------------------------------------------------------------------------------------/
-def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id):
+def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creation_date, group_id):
     data = {
         "ip": ip,
         "ip_int": ip_int,
@@ -125,7 +125,7 @@ def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon
         "count": count,
         "timeout": timeout,
         "drop_date": drop_date,
-        "creatioon_date": creatioon_date,
+        "creation_date": creation_date,
         "group_id": group_id
     }
     with open('data.json', 'w') as outfile:
@@ -156,11 +156,11 @@ def iterate_all_ips():
         count = row[3]
         timeout = row[4]
         drop_date = row[5]
-        creatioon_date = row[6]
+        creation_date = row[6]
         group_id = row[7]
 
         print(f'IP: {ip} (int: {ip_int}), '
-              f'Created: {creatioon_date}, '
+              f'Created: {creation_date}, '
               f'Timeout: {timeout}, '
               f'Dropped: {drop_date}, Status: {status}, '
               f'Count: {count}, '
@@ -175,13 +175,13 @@ def iterate_all_ips():
             "count": count,
             "timeout": timeout,
             "drop_date": drop_date,
-            "creatioon_date": creatioon_date,
+            "creation_date": creation_date,
             "group_id": group_id
         })
 
         # Export data to json file
         # ------------------------------------------------------------------------------------------------------/
-        export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id)
+        export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creation_date, group_id)
 
         if lib.check_date(ip, drop_date, timeout):
             lib.msg_info(f'IP {ip} need ban again')
@@ -236,3 +236,22 @@ if if_timeout:
             lib.msg_info(f'IP {ip} deleted from DB')
     else:
         lib.msg_error(f'IP {ip} not found in DB')
+
+# Create table ip2drop
+# ------------------------------------------------------------------------------------------------------/
+def create_table_ip2drop():
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("""CREATE TABLE ip2drop (
+                ip text,
+                ip_int integer,
+                status text,
+
+                count integer,
+                timeout text,
+                drop_date text,
+                creation_date text,
+                group_id text
+                )""")
+    conn.commit()
+
