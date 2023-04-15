@@ -53,7 +53,7 @@ SKIP_CONFD = CONFIG['MAIN'].getboolean('SKIP_CONFD')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Datetime Format for Journalctl exported logs
-DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+DATETIME_DEFAULT_FORMAT = var.DATETIME_DEFAULT_FORMAT
 TODAY = datetime.date.today()
 IP_NONE = "None"
 
@@ -70,7 +70,6 @@ else:
     D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 
 # get_prod_config_files
-
 # print(D_CONFIG_FILES)
 
 # Dynamics
@@ -131,7 +130,7 @@ def check_start_end(current_timeout, time_difference, log):
     # Timing processes
     log_time_format = '%H:%M:%S'
 
-    # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
+    # start_checking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
     end_checking_time = lib.get_current_time().strftime('%H:%M:%S')
 
     datetime_obj = datetime.datetime.strptime(current_timeout,
