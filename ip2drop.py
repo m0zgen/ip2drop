@@ -454,43 +454,6 @@ def _showstat(ip, count):
     lib.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
 
 
-def _review_exists(ip):
-    creation_date = lib.get_current_time()
-    current_timeout = get_timeout(ip)
-
-    try:
-        last_scan_date = get_last_scan_time()[1]
-    except:
-        add_routine_scan_time(lib.get_current_time())
-
-    # last_log_time =
-
-    # Format: 2023-02-11 18:27:50.192957
-    time_difference = creation_date - datetime.datetime.strptime(current_timeout,
-                                                                 DATETIME_DEFAULT_FORMAT)
-    total_seconds = time_difference.total_seconds()
-    # print(f'Timeout: {time_difference}')
-    # print(f'Total seconds: {total_seconds}')
-    # check_start_end(current_count, time_difference, log)
-
-    # TODO: Get out time
-
-    # current_delta = current_timeout - datetime.datetime.strptime(str(current_time),
-    #                                                              DATETIME_DEFAULT_FORMAT)
-
-    current_delta = datetime.datetime.strptime(current_timeout, DATETIME_DEFAULT_FORMAT) - creation_date
-
-    # TODO: Add and update drop counts
-    # lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
-    # f'Current time: {creation_date} till to: {current_timeout}. Delta: {current_delta}')
-
-    if "-" in str(current_delta):
-        lib.msg_info(f'Timeout expired: {current_delta}')
-        return True
-    else:
-        return False
-
-
 def _drop_simple(ip, timeout):
     # lib.msg_info(f'Adding: {ip}')
     # Ban
