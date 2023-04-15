@@ -14,16 +14,12 @@ from app import var
 from app.var import SERVER_MODE
 from app import lib
 
-# Variables
+# Constants
 # ------------------------------------------------------------------------------------------------------/
-
-# Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG = var.CONFIG
-
 # Datetime Format for Journalctl exported logs
-DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
-
+DATETIME_DEFAULT_FORMAT = var.DATETIME_DEFAULT_FORMAT
 DROP_DB_CLEAN_DAYS = CONFIG['MAIN']['DROP_DB_CLEAN_DAYS']
 
 # Arguments parser section
@@ -46,8 +42,12 @@ if_all = args_helper.all
 if_timeout = args_helper.timeout
 count = args_helper.count
 
+# Additional variables based on arguments
+drop_date = lib.get_drop_date_from_ip(ip)
+timeout = lib.get_timeout_from_ip(ip)
 
-# Functions
+
+# Show Helper info
 # ------------------------------------------------------------------------------------------------------/
 def show_info():
     lib.msg_info(f'Loaded config: {var.LOADED_CONFIG}')
@@ -102,18 +102,17 @@ def update_by_count(ip_count):
     conn.commit()
 
 
-drop_date = lib.get_drop_date_from_ip(ip)
-timeout = lib.get_timeout_from_ip(ip)
+def checking_existing_ip_for_drop_needed(ip):
+    if lib.ip_exist(ip):
+        if lib.check_date(ip, drop_date, timeout):
+            lib.msg_info(f'IP {ip} need ban again. Event details logged to {lib.SYSTEM_LOG}')
+            if if_increment:
+                lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
+                lib.increment_count_by_ip(ip)
 
-if lib.ip_exist(ip):
-    if lib.check_date(ip, drop_date, timeout):
-        lib.msg_info(f'IP {ip} need ban again')
-        if if_increment:
-            lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
-            lib.increment_count_by_ip(ip)
-
-else:
-    lib.msg_info(f'IP {ip} not exist in table ip2drop')
+    else:
+        lib.msg_info(f'IP {ip} not exist in table ip2drop')
+        # exit(0)
 
 
 # Iterate all ips from table ip2drop
@@ -198,6 +197,7 @@ print_all_tables()
 
 # If passed -s argument
 if if_show:
+    # Show helper base info
     show_info()
 
 # If passed -c argument
@@ -218,6 +218,7 @@ if if_all:
 # If passed -i argument
 if ip:
     select_by_ip(ip)
+    checking_existing_ip_for_drop_needed(ip)
 
 # If passed -t argument
 if if_timeout:
