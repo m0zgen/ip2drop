@@ -799,7 +799,7 @@ def main():
             d_enabled = CONFIG['DEFAULT'].getboolean('ENABLED')
             if d_enabled:
                 d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
-                d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
+                d_ip_threshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
                 d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
                 d_export_log = os.path.join(var.EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
@@ -808,7 +808,7 @@ def main():
                 d_skip_log_prev = CONFIG['DEFAULT'].getboolean('SKIP_LOG_PREV')
                 lib.check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes,
+                get_log(d_export_log, d_ip_threshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes,
                         args.stat, d_drop_directly, d_skip_log_prev)
 
     add_routine_scan_time(lib.get_current_time())
