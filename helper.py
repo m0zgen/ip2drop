@@ -183,11 +183,11 @@ def iterate_all_ips():
         # ------------------------------------------------------------------------------------------------------/
         export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id)
 
-        if check_date(ip, drop_date, timeout):
+        if lib.check_date(ip, drop_date, timeout):
             lib.msg_info(f'IP {ip} need ban again')
             if if_increment:
                 lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
-                increment_by_ip(ip)
+                lib.increment_by_ip(ip)
 
         export_data_to_json2(data)
 
@@ -217,7 +217,7 @@ if if_all:
 # Check passed argument -t
 if if_timeout:
     # Check if ip exist in DB
-    if ip_exist(ip):
+    if lib.ip_exist(ip):
         # Get timeout date from DB for ip
         timeout = lib.get_timeout_from_ip(ip)
         print(f'IP: {ip}, Timeout: {timeout}')
