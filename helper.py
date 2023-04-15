@@ -160,10 +160,11 @@ def iterate_all_ips():
         creatioon_date = row[6]
         group_id = row[7]
 
-        print(f'IP: {ip} (int variant: {ip_int}), '
-              f'Drop date: {drop_date}, Status: {status}, '
-              f'Count: {count}, Timeout: {timeout}, '
-              f'Drop date: {drop_date}, Creation date: {creatioon_date}, '
+        print(f'IP: {ip} (int: {ip_int}), '
+              f'Created: {creatioon_date}, '
+              f'Timeout: {timeout}, '
+              f'Dropped: {drop_date}, Status: {status}, '
+              f'Count: {count}, '
               f'Group ID: {group_id}')
 
         # Append data to json file
@@ -199,24 +200,24 @@ print_all_tables()
 if if_show:
     show_info()
 
-# If passed -p argument
-if print_all:
-    show_all_records()
-    exit(0)
-
 # If passed -c argument
 if count:
     print("Count: " + count)
     update_by_count(count)
     exit(0)
 
-# If passed -i argument
-if ip:
-    select_by_ip(ip)
+# If passed -p argument
+if print_all:
+    show_all_records()
+    exit(0)
 
 # If passed -a argument. Show details for all ips
 if if_all:
     iterate_all_ips()
+
+# If passed -i argument
+if ip:
+    select_by_ip(ip)
 
 # If passed -t argument
 if if_timeout:
