@@ -192,29 +192,33 @@ def iterate_all_ips():
         export_data_to_json2(data)
 
 
+# Print table names from DB
 print_all_tables()
 
+# If passed -s argument
 if if_show:
     show_info()
 
+# If passed -p argument
 if print_all:
     show_all_records()
     exit(0)
 
+# If passed -c argument
 if count:
     print("Count: " + count)
     update_by_count(count)
     exit(0)
 
+# If passed -i argument
 if ip:
     select_by_ip(ip)
 
-# If show all ips
+# If passed -a argument. Show details for all ips
 if if_all:
     iterate_all_ips()
 
-
-# Check passed argument -t
+# If passed -t argument
 if if_timeout:
     # Check if ip exist in DB
     if lib.ip_exist(ip):
