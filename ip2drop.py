@@ -29,7 +29,6 @@ from app import var
 from app.var import SERVER_MODE
 from app import lib
 
-
 # Variables
 # ------------------------------------------------------------------------------------------------------/
 
@@ -91,6 +90,8 @@ UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
 # UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
 UPLOAD_SERVERS = CONFIG['MAIN']['UPLOAD_SERVERS'].split(',')
+
+
 # UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
 
 
@@ -510,6 +511,7 @@ def iterate_and_drop(file, timeout, simple_drop, message):
     return found_count
 
 
+# Drop IP permanently / directly
 def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_prev):
     if threshold < 0 and not showstat:
 
@@ -520,6 +522,7 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
         log_len = len(open(log).readlines())
         exclude_from_check = excludes.split(' ')
 
+        # Skip checking (comparing) previous log file
         if skip_log_prev:
             with open(log, "r") as f:
                 for line in f:
@@ -528,10 +531,12 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
             found_count = iterate_and_drop(log_ip, timeout, True, True)
         else:
 
+            # Check if previous log file exist
             if os.path.exists(log_prev):
                 # Compare files
                 cmp = filecmp.cmp(log, log_prev, shallow=False)
 
+                # If files not equal
                 if not cmp:
                     lib.msg_info(f'Log files not seem equal...')
                     with open(log_prev) as log_1, open(log) as log_2:
@@ -557,12 +562,14 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
                 else:
                     lib.msg_info(f'Log files seem equal. Ok.')
 
+            # If previous log file not exist
             else:
                 if not whitespace_only(log):
                     with open(log, "r") as f:
                         for line in f:
                             log_ip.append(line)
 
+                # Iterate log_ip file and drop
                 found_count = iterate_and_drop(log_ip, timeout, True, True)
 
                 # for line in log_ip:
@@ -574,8 +581,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
 
         shutil.copyfile(log, log_prev)
 
+        # Show stat for dropped IPs directly
         if found_count != 0:
             lib.msg_info(f'Found count in drop directly: {found_count}')
+
         print_foundcount(found_count, showstat, log_len)
 
 
