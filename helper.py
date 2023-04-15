@@ -234,6 +234,7 @@ def export_data_to_json2(data):
         json.dump(data, outfile, indent=4, sort_keys=False)
 
 
+# Select and show all DB records in terminal
 def iterate_all_ips():
     data = []
     conn = connect_db()
@@ -309,97 +310,19 @@ if if_all:
     iterate_all_ips()
 
 
-# TODO: Clean record from DB if timeout less than current date more than 1 month (DROP_DB_CLEAN)
-
-# Delete record from DB if timeout less than current date more than 1 month (DROP_DB_CLEAN)
-# ------------------------------------------------------------------------------------------------------/
-def delete_record_from_db(ip):
-    conn = connect_db()
-    c = conn.cursor()
-    lib.msg_info(f'Deleting record from DB for IP {ip}')
-    c.execute("""DELETE FROM ip2drop WHERE ip = ?""", (ip,))
-    conn.commit()
-
-
-# Check timeout date less than current date more than 1 month (DROP_DB_CLEAN)
-# ------------------------------------------------------------------------------------------------------/
-def check_timeout_date(ip, timeout):
-    current_date = datetime.now()
-    bool_status = False
-
-    # Convert list to string
-    # ---------------------------------/
-    timeout = str(timeout)
-    # Convert string to datetime
-    # ---------------------------------/
-    timeout_as_dt = datetime.strptime(timeout, DATETIME_DEFAULT_FORMAT)
-
-    # timeout_as_dt plus DElETE_DB_CLEAN days
-    # ---------------------------------/
-
-    # Convert DROP_DB_CLEAN_DAYS to int
-    days = int(DROP_DB_CLEAN_DAYS)
-    timeout_as_dt = timeout_as_dt + timedelta(days=days)
-
-    print(f'Timeout + DROP_DB_CLEAN_DAYS {DROP_DB_CLEAN_DAYS} as dt: {timeout_as_dt}. Current date: {current_date}')
-
-    # Time delta
-    # ------------------------------------------------------------------------------------------------------/
-
-    # String to datetime
-    timeout_as_dt_str = str(timeout_as_dt)
-    timeout_as_dt_str = datetime.strptime(timeout_as_dt_str, DATETIME_DEFAULT_FORMAT)
-    delta = timeout_as_dt_str - current_date
-
-    # print(delta.days)
-    # print(delta.seconds)
-    # print(delta.microseconds)
-    # print(delta.total_seconds())
-
-    if current_date > timeout_as_dt:
-        lib.msg_info(f'IP {ip} need delete from DB. Overdue: {str(delta)}')
-        bool_status = True
-    else:
-        # print("Timeout less than current date. No need action. Left: " + str(delta))
-        lib.msg_info(f'{ip} - Timeout is greater than than current date. No need action. Left: {str(delta)}')
-
-    return bool_status
-
-
-# Detect time date format from string
-# ------------------------------------------------------------------------------------------------------/
-def detect_datetime_format(date_string):
-    for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%d', DATETIME_DEFAULT_FORMAT):
-        try:
-            datetime.strptime(date_string, fmt)
-            return fmt
-        except ValueError:
-            pass
-    raise ValueError('no valid date format found')
-
-
-# Get timeout date from DB for ip
-# ------------------------------------------------------------------------------------------------------/
-def get_timeout_from_ip(ip):
-    conn = connect_db()
-    c = conn.cursor()
-    c.execute("SELECT timeout FROM ip2drop WHERE ip = ?", (ip,))
-    timeout = c.fetchone()[0]
-    return timeout
-
-
+# Check passed argument -t
 if if_timeout:
-
+    # Check if ip exist in DB
     if ip_exist(ip):
-
-        timeout = get_timeout_from_ip(ip)
+        # Get timeout date from DB for ip
+        timeout = lib.get_timeout_from_ip(ip)
         print(f'IP: {ip}, Timeout: {timeout}')
 
-        if check_timeout_date(ip, timeout):
+        # Check timeout date less than current date more than 1 month (DROP_DB_CLEAN)
+        if lib.check_timeout_date(ip, timeout):
             lib.msg_info(f'IP {ip} need delete from DB')
-            delete_record_from_db(ip)
+            # Delete record from DB
+            lib.delete_record_from_db(ip)
             lib.msg_info(f'IP {ip} deleted from DB')
     else:
         lib.msg_error(f'IP {ip} not found in DB')
-
-
