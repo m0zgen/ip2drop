@@ -331,23 +331,6 @@ def get_drop_ip(ip):
         print("Not found")
     conn.close()
 
-    # if cur.fetchone()[1] == ip:
-    #     print('LogIn Successful') 
-
-
-def ip_exist(ip):
-    conn = sqlite3.connect(DROP_DB)
-    response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
-    fetched = response.fetchone()[0]
-    if fetched == 1:
-        # print("Exist")
-        conn.close()
-        return True
-    else:
-        # print("Does not exist")
-        conn.close()
-        return False
-
 
 def print_db_entries():
     lib.msg_info(f'Mode: Print DB records.')
@@ -414,7 +397,7 @@ def remove_ip_from_ipset(ip):
 
 
 def delete_ip(ip):
-    if ip_exist(ip):
+    if lib.ip_exist(ip):
         print(f'IP: {ip} will be deleted')
         delete_dropped_ip(ip)
 
@@ -715,7 +698,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
                     # IN DEVELOP:
                     # Exists in Drop
-                    if ip_exist(ip):
+                    if lib.ip_exist(ip):
                         print('Checking exists\r', ip, end=' ')
                         db_drop_date = lib.get_drop_date_from_ip(ip)
                         db_undrop_date = lib.get_timeout_from_ip(ip)
