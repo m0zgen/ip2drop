@@ -161,6 +161,22 @@ def connect_db():
     return None
 
 
+# Check if ip exist in table ip2drop
+# ------------------------------------------------------------------------------------------------------/
+def ip_exist(ip):
+    conn = connect_db()
+    response = conn.execute("SELECT EXISTS(SELECT 1 FROM ip2drop WHERE ip=?)", (ip,))
+    fetched = response.fetchone()[0]
+    if fetched == 1:
+        # print("Exist")
+        conn.close()
+        return True
+    else:
+        # print("Does not exist")
+        conn.close()
+        return False
+
+
 # Select drop_date from table ip2drop by ip
 # ------------------------------------------------------------------------------------------------------/
 def get_drop_date_from_ip(ip):
