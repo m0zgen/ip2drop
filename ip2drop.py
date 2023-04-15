@@ -306,6 +306,7 @@ def update_unban_date(unban_date, ip):
     cur.execute("""UPDATE ip2drop SET TIMEOUT = :TIMEOUT WHERE IP =:IP """, {'TIMEOUT': unban_date, 'IP': ip})
     conn.commit()
     print("Update Undrop Status Successful")
+    lib.msg_info(f'IP: {ip} updated undrop date to {unban_date}.')
     conn.close()
 
 
@@ -513,9 +514,10 @@ def _drop(ip, timeout, count, again):
 
     # Update in DB
     if again:
-        current_count = get_drop_count(ip)
-        current_count = lib.increment(current_count)
-        update_drop_count(current_count, ip)
+        lib.increment_count_by_ip(ip)
+        # current_count = get_drop_count(ip)
+        # current_count = lib.increment(current_count)
+        # update_drop_count(current_count, ip)
 
     current_date = lib.get_current_time()
     undrop_date = current_date + datetime.timedelta(seconds=timeout)
@@ -703,9 +705,9 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         db_drop_date = lib.get_drop_date_from_ip(ip)
                         db_undrop_date = lib.get_timeout_from_ip(ip)
                         if lib.check_date(ip, db_drop_date, db_undrop_date):
-                            lib.msg_info(f'IP {ip} need ban again')
+                            lib.msg_info(f'IP {ip} need drop again')
+                            lib.log_info(f'IP {ip} dropped again')
                             _drop(ip, timeout, count, True)
-                            lib.increment_by_ip(ip)
                             # TODO: Show in print info about increment
                         # if _review_exists(ip):
                         #     lib.msg_info(f'Need ban again {ip}')

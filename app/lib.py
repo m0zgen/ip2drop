@@ -263,7 +263,7 @@ def delete_record_from_db(ip):
 # Increment record to table ip2drop by ip
 # Increment count by +1
 # ------------------------------------------------------------------------------------------------------/
-def increment_by_ip(ip):
+def increment_count_by_ip(ip):
     conn = connect_db()
     c = conn.cursor()
     c.execute("""UPDATE ip2drop SET COUNT = COUNT + 1 WHERE ip = ?""", (ip,))

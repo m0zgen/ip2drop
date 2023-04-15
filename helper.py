@@ -110,7 +110,7 @@ if lib.ip_exist(ip):
         lib.msg_info(f'IP {ip} need ban again')
         if if_increment:
             lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
-            lib.increment_by_ip(ip)
+            lib.increment_count_by_ip(ip)
 
 else:
     lib.msg_info(f'IP {ip} not exist in table ip2drop')
@@ -187,7 +187,7 @@ def iterate_all_ips():
             lib.msg_info(f'IP {ip} need ban again')
             if if_increment:
                 lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
-                lib.increment_by_ip(ip)
+                lib.increment_count_by_ip(ip)
 
         export_data_to_json2(data)
 
