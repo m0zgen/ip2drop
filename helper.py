@@ -237,6 +237,8 @@ if if_timeout:
     else:
         lib.msg_error(f'IP {ip} not found in DB')
 
+
+# Testing DB functions
 # Create table ip2drop
 # ------------------------------------------------------------------------------------------------------/
 def create_table_ip2drop():
@@ -254,4 +256,18 @@ def create_table_ip2drop():
                 group_id text
                 )""")
     conn.commit()
+
+
+# Create DB table if not exist
+# ------------------------------------------------------------------------------------------------------/
+def create_table_if_not_exist():
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("""SELECT name FROM sqlite_master WHERE type='table' AND name='ip2drop'""")
+    if c.fetchone() is None:
+        lib.msg_info('Table ip2drop not exist. Creating table ip2drop')
+        create_table_ip2drop()
+    else:
+        lib.msg_info('Table ip2drop exist. Exit. Byw')
+        exit(0)
 
