@@ -14,16 +14,12 @@ from app import var
 from app.var import SERVER_MODE
 from app import lib
 
-# Variables
+# Constants
 # ------------------------------------------------------------------------------------------------------/
-
-# Init Section
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG = var.CONFIG
-
 # Datetime Format for Journalctl exported logs
-DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
-
+DATETIME_DEFAULT_FORMAT = var.DATETIME_DEFAULT_FORMAT
 DROP_DB_CLEAN_DAYS = CONFIG['MAIN']['DROP_DB_CLEAN_DAYS']
 
 # Arguments parser section
@@ -46,8 +42,12 @@ if_all = args_helper.all
 if_timeout = args_helper.timeout
 count = args_helper.count
 
+# Additional variables based on arguments
+drop_date = lib.get_drop_date_from_ip(ip)
+timeout = lib.get_timeout_from_ip(ip)
 
-# Functions
+
+# Show Helper info
 # ------------------------------------------------------------------------------------------------------/
 def show_info():
     lib.msg_info(f'Loaded config: {var.LOADED_CONFIG}')
@@ -102,23 +102,22 @@ def update_by_count(ip_count):
     conn.commit()
 
 
-drop_date = lib.get_drop_date_from_ip(ip)
-timeout = lib.get_timeout_from_ip(ip)
+def checking_existing_ip_for_drop_needed(ip):
+    if lib.ip_exist(ip):
+        if lib.check_date(ip, drop_date, timeout):
+            lib.msg_info(f'IP {ip} need ban again. Event details logged to {lib.SYSTEM_LOG}')
+            if if_increment:
+                lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
+                lib.increment_count_by_ip(ip)
 
-if lib.ip_exist(ip):
-    if lib.check_date(ip, drop_date, timeout):
-        lib.msg_info(f'IP {ip} need ban again')
-        if if_increment:
-            lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
-            lib.increment_by_ip(ip)
-
-else:
-    lib.msg_info(f'IP {ip} not exist in table ip2drop')
+    else:
+        lib.msg_info(f'IP {ip} not exist in table ip2drop')
+        # exit(0)
 
 
 # Iterate all ips from table ip2drop
 # ------------------------------------------------------------------------------------------------------/
-def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id):
+def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creation_date, group_id):
     data = {
         "ip": ip,
         "ip_int": ip_int,
@@ -126,7 +125,7 @@ def export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon
         "count": count,
         "timeout": timeout,
         "drop_date": drop_date,
-        "creatioon_date": creatioon_date,
+        "creation_date": creation_date,
         "group_id": group_id
     }
     with open('data.json', 'w') as outfile:
@@ -157,13 +156,14 @@ def iterate_all_ips():
         count = row[3]
         timeout = row[4]
         drop_date = row[5]
-        creatioon_date = row[6]
+        creation_date = row[6]
         group_id = row[7]
 
-        print(f'IP: {ip} (int variant: {ip_int}), '
-              f'Drop date: {drop_date}, Status: {status}, '
-              f'Count: {count}, Timeout: {timeout}, '
-              f'Drop date: {drop_date}, Creation date: {creatioon_date}, '
+        print(f'IP: {ip} (int: {ip_int}), '
+              f'Created: {creation_date}, '
+              f'Timeout: {timeout}, '
+              f'Dropped: {drop_date}, Status: {status}, '
+              f'Count: {count}, '
               f'Group ID: {group_id}')
 
         # Append data to json file
@@ -175,46 +175,52 @@ def iterate_all_ips():
             "count": count,
             "timeout": timeout,
             "drop_date": drop_date,
-            "creatioon_date": creatioon_date,
+            "creation_date": creation_date,
             "group_id": group_id
         })
 
         # Export data to json file
         # ------------------------------------------------------------------------------------------------------/
-        export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creatioon_date, group_id)
+        export_data_to_json(ip, ip_int, status, count, timeout, drop_date, creation_date, group_id)
 
         if lib.check_date(ip, drop_date, timeout):
             lib.msg_info(f'IP {ip} need ban again')
             if if_increment:
                 lib.msg_info(f'Increment count by 1 for IP {ip} in table ip2drop')
-                lib.increment_by_ip(ip)
+                lib.increment_count_by_ip(ip)
 
         export_data_to_json2(data)
 
 
+# Print table names from DB
 print_all_tables()
 
+# If passed -s argument
 if if_show:
+    # Show helper base info
     show_info()
 
-if print_all:
-    show_all_records()
-    exit(0)
-
+# If passed -c argument
 if count:
     print("Count: " + count)
     update_by_count(count)
     exit(0)
 
-if ip:
-    select_by_ip(ip)
+# If passed -p argument
+if print_all:
+    show_all_records()
+    exit(0)
 
-# If show all ips
+# If passed -a argument. Show details for all ips
 if if_all:
     iterate_all_ips()
 
+# If passed -i argument
+if ip:
+    select_by_ip(ip)
+    checking_existing_ip_for_drop_needed(ip)
 
-# Check passed argument -t
+# If passed -t argument
 if if_timeout:
     # Check if ip exist in DB
     if lib.ip_exist(ip):
@@ -230,3 +236,38 @@ if if_timeout:
             lib.msg_info(f'IP {ip} deleted from DB')
     else:
         lib.msg_error(f'IP {ip} not found in DB')
+
+
+# Testing DB functions
+# Create table ip2drop
+# ------------------------------------------------------------------------------------------------------/
+def create_table_ip2drop():
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("""CREATE TABLE ip2drop (
+                ip text,
+                ip_int integer,
+                status text,
+
+                count integer,
+                timeout text,
+                drop_date text,
+                creation_date text,
+                group_id text
+                )""")
+    conn.commit()
+
+
+# Create DB table if not exist
+# ------------------------------------------------------------------------------------------------------/
+def create_table_if_not_exist():
+    conn = connect_db()
+    c = conn.cursor()
+    c.execute("""SELECT name FROM sqlite_master WHERE type='table' AND name='ip2drop'""")
+    if c.fetchone() is None:
+        lib.msg_info('Table ip2drop not exist. Creating table ip2drop')
+        create_table_ip2drop()
+    else:
+        lib.msg_info('Table ip2drop exist. Exit. Byw')
+        exit(0)
+

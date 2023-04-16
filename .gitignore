@@ -2,6 +2,7 @@
 .idea
 .fleet
 .code
+.vscode
 
 # OS
 .DS_Store

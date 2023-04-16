@@ -29,7 +29,6 @@ from app import var
 from app.var import SERVER_MODE
 from app import lib
 
-
 # Variables
 # ------------------------------------------------------------------------------------------------------/
 
@@ -54,7 +53,7 @@ SKIP_CONFD = CONFIG['MAIN'].getboolean('SKIP_CONFD')
 # print(f'TIMEOUT: {IP_TIMEOUT}, COMMAND: {EXPORT_COMMAND}, ENABLED: {IPSET_ENABLED}')
 
 # Datetime Format for Journalctl exported logs
-DATETIME_DEFAULT_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
+DATETIME_DEFAULT_FORMAT = var.DATETIME_DEFAULT_FORMAT
 TODAY = datetime.date.today()
 IP_NONE = "None"
 
@@ -71,7 +70,6 @@ else:
     D_CONFIG_FILES, D_CONFIG_COUNT = var.get_config_files()
 
 # get_prod_config_files
-
 # print(D_CONFIG_FILES)
 
 # Dynamics
@@ -91,6 +89,8 @@ UPLOAD_FILE = os.path.join(UPLOAD_DIR, UPLOAD_FILE_NAME)
 UPLOAD_TO_SERVER = CONFIG['MAIN'].getboolean('UPLOAD_TO_SERVER')
 # UPLOAD_SERVER = CONFIG['MAIN']['UPLOAD_SERVER']
 UPLOAD_SERVERS = CONFIG['MAIN']['UPLOAD_SERVERS'].split(',')
+
+
 # UPLOAD_PROTOCOL = CONFIG['MAIN']['UPLOAD_PROTOCOL']
 
 
@@ -130,7 +130,7 @@ def check_start_end(current_timeout, time_difference, log):
     # Timing processes
     log_time_format = '%H:%M:%S'
 
-    # start_cheking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
+    # start_checking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
     end_checking_time = lib.get_current_time().strftime('%H:%M:%S')
 
     datetime_obj = datetime.datetime.strptime(current_timeout,
@@ -306,6 +306,7 @@ def update_unban_date(unban_date, ip):
     cur.execute("""UPDATE ip2drop SET TIMEOUT = :TIMEOUT WHERE IP =:IP """, {'TIMEOUT': unban_date, 'IP': ip})
     conn.commit()
     print("Update Undrop Status Successful")
+    lib.msg_info(f'IP: {ip} updated undrop date to {unban_date}.')
     conn.close()
 
 
@@ -453,43 +454,6 @@ def _showstat(ip, count):
     lib.log_warn(f'Action without drop. Found: {ip} -> Threshold: {count}')
 
 
-def _review_exists(ip):
-    creation_date = lib.get_current_time()
-    current_timeout = get_timeout(ip)
-
-    try:
-        last_scan_date = get_last_scan_time()[1]
-    except:
-        add_routine_scan_time(lib.get_current_time())
-
-    # last_log_time =
-
-    # Format: 2023-02-11 18:27:50.192957
-    time_difference = creation_date - datetime.datetime.strptime(current_timeout,
-                                                                 DATETIME_DEFAULT_FORMAT)
-    total_seconds = time_difference.total_seconds()
-    # print(f'Timeout: {time_difference}')
-    # print(f'Total seconds: {total_seconds}')
-    # check_start_end(current_count, time_difference, log)
-
-    # TODO: Get out time
-
-    # current_delta = current_timeout - datetime.datetime.strptime(str(current_time),
-    #                                                              DATETIME_DEFAULT_FORMAT)
-
-    current_delta = datetime.datetime.strptime(current_timeout, DATETIME_DEFAULT_FORMAT) - creation_date
-
-    # TODO: Add and update drop counts
-    # lib.msg_info(f'Info: IP exist in Drop DB: {ip}. '
-    # f'Current time: {creation_date} till to: {current_timeout}. Delta: {current_delta}')
-
-    if "-" in str(current_delta):
-        lib.msg_info(f'Timeout expired: {current_delta}')
-        return True
-    else:
-        return False
-
-
 def _drop_simple(ip, timeout):
     # lib.msg_info(f'Adding: {ip}')
     # Ban
@@ -513,9 +477,10 @@ def _drop(ip, timeout, count, again):
 
     # Update in DB
     if again:
-        current_count = get_drop_count(ip)
-        current_count = lib.increment(current_count)
-        update_drop_count(current_count, ip)
+        lib.increment_count_by_ip(ip)
+        # current_count = get_drop_count(ip)
+        # current_count = lib.increment(current_count)
+        # update_drop_count(current_count, ip)
 
     current_date = lib.get_current_time()
     undrop_date = current_date + datetime.timedelta(seconds=timeout)
@@ -545,6 +510,7 @@ def iterate_and_drop(file, timeout, simple_drop, message):
     return found_count
 
 
+# Drop IP permanently / directly
 def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_prev):
     if threshold < 0 and not showstat:
 
@@ -555,6 +521,7 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
         log_len = len(open(log).readlines())
         exclude_from_check = excludes.split(' ')
 
+        # Skip checking (comparing) previous log file
         if skip_log_prev:
             with open(log, "r") as f:
                 for line in f:
@@ -563,10 +530,12 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
             found_count = iterate_and_drop(log_ip, timeout, True, True)
         else:
 
+            # Check if previous log file exist
             if os.path.exists(log_prev):
                 # Compare files
                 cmp = filecmp.cmp(log, log_prev, shallow=False)
 
+                # If files not equal
                 if not cmp:
                     lib.msg_info(f'Log files not seem equal...')
                     with open(log_prev) as log_1, open(log) as log_2:
@@ -592,12 +561,14 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
                 else:
                     lib.msg_info(f'Log files seem equal. Ok.')
 
+            # If previous log file not exist
             else:
                 if not whitespace_only(log):
                     with open(log, "r") as f:
                         for line in f:
                             log_ip.append(line)
 
+                # Iterate log_ip file and drop
                 found_count = iterate_and_drop(log_ip, timeout, True, True)
 
                 # for line in log_ip:
@@ -609,8 +580,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
 
         shutil.copyfile(log, log_prev)
 
+        # Show stat for dropped IPs directly
         if found_count != 0:
             lib.msg_info(f'Found count in drop directly: {found_count}')
+
         print_foundcount(found_count, showstat, log_len)
 
 
@@ -703,9 +676,9 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                         db_drop_date = lib.get_drop_date_from_ip(ip)
                         db_undrop_date = lib.get_timeout_from_ip(ip)
                         if lib.check_date(ip, db_drop_date, db_undrop_date):
-                            lib.msg_info(f'IP {ip} need ban again')
+                            lib.msg_info(f'IP {ip} need drop again')
+                            lib.log_info(f'IP {ip} dropped again')
                             _drop(ip, timeout, count, True)
-                            lib.increment_by_ip(ip)
                             # TODO: Show in print info about increment
                         # if _review_exists(ip):
                         #     lib.msg_info(f'Need ban again {ip}')
@@ -826,7 +799,7 @@ def main():
             d_enabled = CONFIG['DEFAULT'].getboolean('ENABLED')
             if d_enabled:
                 d_export_cmd = CONFIG['DEFAULT']['EXPORT_COMMAND']
-                d_ip_treshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
+                d_ip_threshold = CONFIG['DEFAULT'].getint('IP_THRESHOLD')
                 d_ip_timeout = CONFIG['DEFAULT'].getint('IP_TIMEOUT')
                 d_export_log = os.path.join(var.EXPORTED_LOGS_DIR, CONFIG['DEFAULT']['EXPORT_LOG'])
                 d_group_name = CONFIG['DEFAULT']['GROUP_NAME']
@@ -835,7 +808,7 @@ def main():
                 d_skip_log_prev = CONFIG['DEFAULT'].getboolean('SKIP_LOG_PREV')
                 lib.check_file(d_export_log)
                 export_log(d_export_cmd, d_export_log)
-                get_log(d_export_log, d_ip_treshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes,
+                get_log(d_export_log, d_ip_threshold, d_ip_timeout, d_group_name, d_export_to_upload, args.excludes,
                         args.stat, d_drop_directly, d_skip_log_prev)
 
     add_routine_scan_time(lib.get_current_time())
