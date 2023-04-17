@@ -104,6 +104,8 @@ Delete IP from DB:
 30-01-2023 19-43-59,331 root INFO Processing log: /opt/ip2drop/logs/ip2drop.log
 ```
 
+You can install `logrotate` rules for `ip2drop` logs, from `src/logrotate.d` catalog.
+
 # Option Requirements
 
 * `python3`
