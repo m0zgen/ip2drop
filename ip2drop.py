@@ -126,34 +126,6 @@ def arg_parse():
 
 #
 # ------------------------------------------------------------------------------------------------------/
-def check_start_end(current_timeout, time_difference, log):
-    # Timing processes
-    log_time_format = '%H:%M:%S'
-
-    # start_checking_time = datetime.datetime.strptime(current_timeout, '%H:%M:%S').time()
-    end_checking_time = lib.get_current_time().strftime('%H:%M:%S')
-
-    datetime_obj = datetime.datetime.strptime(current_timeout,
-                                              DATETIME_DEFAULT_FORMAT)
-
-    time = datetime_obj.time()
-    time = str(time).split('.')[0]
-
-    print(f'Start time: {time}, End time: {end_checking_time}')
-
-    print(
-        f'Current timeout: {current_timeout}, Timeout: {time_difference}')
-
-    # stat_count = get_drop_count(ip)
-    # print(f'Count: {stat_count}')
-
-    # TODO: Get current 'status' and then +1 (get_drop_status)
-    # TODO: Get undropTime if
-    # TODO: Get current time and expire time
-
-    # print(f'Timeout {current_timeout}, Count: {current_count}')
-
-
 def get_app_json(file):
     data = ""
     try:
