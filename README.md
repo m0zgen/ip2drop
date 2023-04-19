@@ -103,8 +103,14 @@ Delete IP from DB:
 30-01-2023 19-43-59,316 root INFO Command: journalctl -u ssh -S today --no-tail | grep 'Failed password' Log: /opt/ip2drop/logs/ip2drop.log Threshold 150 Stat: False
 30-01-2023 19-43-59,331 root INFO Processing log: /opt/ip2drop/logs/ip2drop.log
 ```
+`ip2drop` automatically detects OS distro Linux/macOS, `ip2drop.log` location depends on OS:
 
-You can install `logrotate` rules for `ip2drop` logs, from `src/logrotate.d` catalog.
+* Linux: `/var/log/ip2drop.log`
+* macOS: `<ip2drop location>/logs/ip2drop-script.log`
+
+## Linux Logrotate
+
+You can install `logrotate` rules for `ip2drop`, from `src/logrotate.d` catalog.
 
 # Option Requirements
 
