@@ -112,6 +112,11 @@ Delete IP from DB:
 
 You can install `logrotate` rules for `ip2drop`, from `src/logrotate.d` catalog.
 
+Copy `src/logrotate.d/ip2drop` to `/etc/logrotate.d/`:
+```shell
+cp src/logrotate.d/ip2drop /etc/logrotate.d/
+```
+
 # Option Requirements
 
 * `python3`
