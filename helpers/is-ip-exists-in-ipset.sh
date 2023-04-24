@@ -48,4 +48,3 @@ for file in $(ls -1 "../upload"); do
     echo "File ${file} is empty"
   fi
 done
-

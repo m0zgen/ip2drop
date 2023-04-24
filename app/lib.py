@@ -206,6 +206,7 @@ def get_timeout_from_ip(ip):
 
 
 # Check timeout date less than current date more than 1 month (DROP_DB_CLEAN)
+# Need for delete from DB action
 # ------------------------------------------------------------------------------------------------------/
 def check_timeout_date(ip, timeout):
     current_date = datetime.now()
@@ -225,7 +226,9 @@ def check_timeout_date(ip, timeout):
     days = int(var.DROP_DB_CLEAN_DAYS)
     timeout_as_dt = timeout_as_dt + timedelta(days=days)
 
-    print(f'Timeout + DROP_DB_CLEAN_DAYS {var.DROP_DB_CLEAN_DAYS} as dt: {timeout_as_dt}. Current date: {current_date}')
+    print(f'Check deletion from DB: '
+          f'Timeout + Config Drop DB Clean Days: {var.DROP_DB_CLEAN_DAYS} '
+          f'as dt: {timeout_as_dt}. Current date: {current_date}')
 
     # Time delta
     # ------------------------------------------------------------------------------------------------------/
@@ -241,11 +244,13 @@ def check_timeout_date(ip, timeout):
     # print(delta.total_seconds())
 
     if current_date > timeout_as_dt:
-        msg_info(f'IP {ip} need delete from DB. Overdue: {str(delta)}')
+        msg_info(f'Check deletion from DB: '
+                 f'IP {ip} need delete from DB. Overdue: {str(delta)}')
         bool_status = True
     else:
         # print("Timeout less than current date. No need action. Left: " + str(delta))
-        msg_info(f'{ip} - Timeout is greater than than current date. No need action. Left: {str(delta)}')
+        msg_info(f'Check deletion from DB: '
+                 f'{ip} - Timeout is greater than than current date. No need action. Left: {str(delta)}')
 
     return bool_status
 

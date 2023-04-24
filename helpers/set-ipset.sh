@@ -29,7 +29,7 @@ if ! [ -x "$(command -v firewall-cmd)" ]; then
     echo 'Error: firewall-cmd is not installed.' >&2
     exit 1
 fi
-# 
+#
 
 # Once operation
 setup_firewalld() {
@@ -48,7 +48,7 @@ setup_firewalld() {
         else
             exit 1
         fi
-        
+
     fi
 }
 

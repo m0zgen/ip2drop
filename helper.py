@@ -270,4 +270,3 @@ def create_table_if_not_exist():
     else:
         lib.msg_info('Table ip2drop exist. Exit. Byw')
         exit(0)
-

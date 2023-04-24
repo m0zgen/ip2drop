@@ -162,7 +162,7 @@ def check_app_versioning():
             rebind_db(previous_db)
             app_json_data['ip2drop']['previous_database_version'] = current_db
             with open(var.APP_JSON, "w") as jsonFile:
-                json.dump(app_json_data, jsonFile, indent=4, sort_keys=True)
+                json.dump(app_json_data, jsonFile, indent=2, sort_keys=True)
     else:
         print(f'App JSON not found')
 
@@ -597,7 +597,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
     found_count = 0
 
     if drop_directly:
-        # found_count = 
+        # found_count =
         drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_prev)
 
     with open(log, "r") as f:

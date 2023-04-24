@@ -25,7 +25,7 @@ Works with multiple conditions:
 ./ip2drop.py -l ssh-ctl.log -t 1 -c "journalctl -u ssh -S today --no-tail | grep 'Connection closed by authenticating user root'"
 ```
 
-If threshold value (`-t 1`) will exceed, founded IP from log (`-l ssh-ctl.log`) will send to firewalld `drop` zone. 
+If threshold value (`-t 1`) will exceed, founded IP from log (`-l ssh-ctl.log`) will send to firewalld `drop` zone.
 If you want to review statistics for, jus add `-s` argument to command.
 
 Result:
@@ -54,7 +54,7 @@ This is real-time firewalld action (not `--permanent`) for reset blocking IPs yo
 
 ## Main Config
 
-* `IP_EXCLUDES` - Exlude IP list from `drop` actions (only logging) 
+* `IP_EXCLUDES` - Exlude IP list from `drop` actions (only logging)
 * `SKIP_DEFAULT_RULE` - Skip `[DEFAULT]` rule from `config.yml`
 * `UPLOAD` - Generate upload file with dropped IP list, with name <Server_Name>_upload.txt
 * `UPLOAD_TO_SERVER` - Upload generated file to remote web server (like [cactusd](https://github.com/m0zgen/cactusd))
@@ -137,5 +137,5 @@ or just run `check-modules.sh` from `helpers` catalog.
 
 # Remote server
 
-You can user remote [cactusd](https://github.com/m0zgen/cactusd) server as central server for collect, aggregate dropped IP and 
+You can user remote [cactusd](https://github.com/m0zgen/cactusd) server as central server for collect, aggregate dropped IP and
 distribution for another `ip2drop` endpoints.
