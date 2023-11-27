@@ -33,6 +33,7 @@ fi
 
 # Once operation
 rebind_firewalld(){
+  firewall-cmd --permanent --remove-source=ipset:${IPSET_NAME} --zone=dns
   firewall-cmd --permanent --delete-ipset=${IPSET_NAME}
   firewall-cmd --reload
   firewall-cmd --permanent --new-ipset=${IPSET_NAME} --type=hash:ip --option=timeout=60  --option=maxelem=524288
