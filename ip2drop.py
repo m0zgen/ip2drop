@@ -564,13 +564,9 @@ def generate_upload_file(ip, export_to_upload, showstat):
     if showstat:
         print(f'Only statistics')
     else:
-        if export_to_upload:
-            print(f'Export to upload')
-            # lib.append_to_file(UPLOAD_FILE, ip)
-
-    if IS_UPLOAD_ENABLED:
-        if export_to_upload:
-            lib.append_to_file(UPLOAD_FILE, ip)
+        if IS_UPLOAD_ENABLED:
+            if export_to_upload:
+                lib.append_to_file(UPLOAD_FILE, ip)
 
 
 def post_upload_file(target_server):
