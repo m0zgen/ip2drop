@@ -562,9 +562,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
 def generate_upload_file(ip, export_to_upload, showstat):
     # if not showstat function
 
-    if IS_UPLOAD_ENABLED and not showstat:
+    if IS_UPLOAD_ENABLED:
         if export_to_upload:
-            lib.append_to_file(UPLOAD_FILE, ip)
+            if not showstat:
+                lib.append_to_file(UPLOAD_FILE, ip)
 
 
 def post_upload_file(target_server):
