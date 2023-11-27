@@ -628,15 +628,11 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 # print(from_int)
                 found_count = lib.increment(found_count)
 
-                # If not show stat
-                if not showstat:
-                    generate_upload_file(ip, export_to_upload)
-
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
                     _showstat(ip, count)
-
                 else:
+                    generate_upload_file(ip, export_to_upload)
                     # TODO: Need to remove this section
                     # TODO: All IP need to append to ipset through text list
 
