@@ -559,8 +559,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
         print_foundcount(found_count, showstat, log_len)
 
 
-def generate_upload_file(ip, export_to_upload):
-    if IS_UPLOAD_ENABLED:
+def generate_upload_file(ip, export_to_upload, showstat):
+    # if not showstat function
+
+    if IS_UPLOAD_ENABLED and not showstat:
         if export_to_upload:
             lib.append_to_file(UPLOAD_FILE, ip)
 
@@ -627,12 +629,13 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
                 found_count = lib.increment(found_count)
+                generate_upload_file(ip, export_to_upload, showstat)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
                     _showstat(ip, count)
+
                 else:
-                    generate_upload_file(ip, export_to_upload)
                     # TODO: Need to remove this section
                     # TODO: All IP need to append to ipset through text list
 
