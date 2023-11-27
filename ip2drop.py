@@ -627,7 +627,6 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
                 found_count = lib.increment(found_count)
-                generate_upload_file(ip, export_to_upload)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
@@ -639,6 +638,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
 
                     # Add DB Record time
                     # TODO: Need to Fix Drop time
+                    generate_upload_file(ip, export_to_upload)
                     creation_date = lib.get_current_time()
 
                     # IN DEVELOP:
@@ -756,7 +756,10 @@ def main():
     if IS_UPLOAD_ENABLED:
         lib.check_dir(UPLOAD_DIR)
         lib.check_file(UPLOAD_FILE)
-        lib.truncate_file(UPLOAD_FILE)
+
+        # Do nothing is stat enabled
+        if not args.stat:
+            lib.truncate_file(UPLOAD_FILE)
 
     # Main functions
     if not SKIP_DEFAULT_RULE or args.includedefault:
