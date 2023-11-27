@@ -559,14 +559,10 @@ def drop_now(log, threshold, timeout, group_name, showstat, excludes, skip_log_p
         print_foundcount(found_count, showstat, log_len)
 
 
-def generate_upload_file(ip, export_to_upload, showstat):
-    # if not showstat function
-    if showstat:
-        print(f'Only statistics')
-    else:
-        if IS_UPLOAD_ENABLED:
-            if export_to_upload:
-                lib.append_to_file(UPLOAD_FILE, ip)
+def generate_upload_file(ip, export_to_upload):
+    if IS_UPLOAD_ENABLED:
+        if export_to_upload:
+            lib.append_to_file(UPLOAD_FILE, ip)
 
 
 def post_upload_file(target_server):
@@ -631,7 +627,7 @@ def get_log(log, threshold, timeout, group_name, export_to_upload, excludes, sho
                 from_int = ipaddress.IPv4Address(int_ip)
                 # print(from_int)
                 found_count = lib.increment(found_count)
-                generate_upload_file(ip, export_to_upload, showstat)
+                generate_upload_file(ip, export_to_upload)
 
                 # Show threshold statistic without drop (arg: -s)
                 if showstat:
